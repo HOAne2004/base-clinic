@@ -1,0 +1,6 @@
+@BaseClinic_HostAddress = http://localhost:5189
+
+GET {{BaseClinic_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

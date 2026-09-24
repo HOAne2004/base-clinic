@@ -16,6 +16,11 @@ namespace BaseClinic.Domain.Constants
             public const string Cancel = "Appointment.Cancel";
         }
 
+        public static class Department
+        {
+            [PermissionInfo(Description = "Cho phép người dùng tạo phòng ban mới.")]
+            public const string Create = "Department.Create";
+        }
         public static class Encounter
         {
             [PermissionInfo(Description = "Bắt đầu phiên khám bệnh.")]
