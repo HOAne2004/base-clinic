@@ -22,5 +22,11 @@ namespace BaseClinic.DataAccess.Repositories
                 .AnyAsync(d => d.DepartmentCode == departmentCode, cancellationToken);
             
         }
+
+        public async Task<Department?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return await _context.Departments
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
     }
 }

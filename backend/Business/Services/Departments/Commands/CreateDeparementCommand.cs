@@ -4,13 +4,12 @@ using MediatR;
 
 namespace BaseClinic.Business.Services.Departments.Commands
 {
-    public class CreateDeparementCommand : IRequest<Guid>
-    {
-        public string Name { get;  set; } = string.Empty;
-        public string DepartmentCode { get;  set; } = string.Empty;
-        public string? ImageUrl { get;  set; }
-        public string? Description { get;  set; }
-    }
+    public record CreateDeparementCommand 
+        (string Name,
+        string DepartmentCode,
+        string? ImageUrl,
+        string? Description) : IRequest<Guid>;
+    
 
     public class CreateDeparementCommandHandler : IRequestHandler<CreateDeparementCommand, Guid>
     {

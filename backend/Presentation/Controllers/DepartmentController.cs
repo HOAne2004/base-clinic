@@ -1,4 +1,5 @@
 ﻿using BaseClinic.Business.Services.Departments.Commands;
+using BaseClinic.Business.Services.Departments.Queries;
 using BaseClinic.Domain.Constants;
 using BaseClinic.Presentation.Authorization;
 using MediatR;
@@ -28,6 +29,42 @@ namespace BaseClinic.Presentation.Controllers
                 actionName: nameof(Create),
                 routeValues: new { id = departmentId },
                 value: new { Message = "Thêm mới khoa thành công.", Data = departmentId });
+        }
+
+        [HttpPut("{id}")]
+        [RequirePermission(SystemPermissions.Department.Update)]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDepartmentCommand command)
+        {
+            command.Id = id;
+            await _mediator.Send(command);
+            return Ok(new { Message = "Cập nhật thông tin thành công." });
+        }
+
+        [HttpDelete("{id}")]
+        [RequirePermission(SystemPermissions.Department.Delete)]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var command = new DeactivateDepartmentCommand { Id = id };
+            await _mediator.Send(command);
+            return Ok(new { Message = "Đã vô hiệu hóa thành công." });
+        }
+
+        [HttpGet("lookup")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetLookupList()
+        {
+            var query = new GetActiveDepartmentsQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [RequirePermission(SystemPermissions.Department.View)]
+        public async Task<IActionResult> GetAll()
+        {
+            var query = new GetAllDepartmentsQuery();
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }

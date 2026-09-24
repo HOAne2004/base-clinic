@@ -7,6 +7,7 @@ namespace BaseClinic.Business.Interfaces
         void Add(Department department);
 
         //Mã khoa là duy nhất
-        Task<bool> IsCodeExistAsync(string departmentCode, CancellationToken cancellationToken = default); 
+        Task<bool> IsCodeExistAsync(string departmentCode, CancellationToken cancellationToken = default);
+        Task<Department?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }
