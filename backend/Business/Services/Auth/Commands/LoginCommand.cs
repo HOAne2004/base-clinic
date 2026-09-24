@@ -5,12 +5,9 @@ using MediatR;
 
 namespace BaseClinic.Business.Services.Auth.Commands
 {
-    public class LoginCommand : IRequest<string>
-    {
-        public string PhoneNumber { get; set; } = null!;
-        public string Password { get; set; } = null!;
-    }
-
+    public record LoginCommand
+        ( string PhoneNumber, string Password): IRequest<string>;
+    
     public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
     {
         private readonly IAccountRepository _accountRepository;
@@ -46,15 +43,15 @@ namespace BaseClinic.Business.Services.Auth.Commands
 
             // Bước 4: Khởi tạo model TokenUser 
             var tokenUser = new TokenUser
-            {
-                Id = account.Id,
-                FullName = account.FullName,
-                Email = account.Email ?? string.Empty, // Đảm bảo không null nếu DB chưa bắt buộc
-                SecurityStamp = Guid.NewGuid(),
-                SessionId = Guid.NewGuid(),
-                Roles = roles,
-                Permissions = permissions
-            };
+            (
+                account.Id,
+                account.FullName,
+                account.Email ?? string.Empty,
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                roles,
+                permissions
+                );
 
             // Bước 5: Gọi hàm đúc Token
             string accessToken = _jwtProvider.GenerateAccessToken(tokenUser);

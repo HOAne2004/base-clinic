@@ -6,13 +6,8 @@ using MediatR;
 
 namespace BaseClinic.Business.Services.Auth.Commands
 {
-    public class RegisterCommand : IRequest<bool>
-    {
-        public string FullName { get; set; } = string.Empty;
-        public string PhoneNumber { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-
+    public record RegisterCommand (string FullName, string PhoneNumber, string Password) : IRequest<bool>;
+    
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
     {
         private readonly IUnitOfWork _unitOfWork;

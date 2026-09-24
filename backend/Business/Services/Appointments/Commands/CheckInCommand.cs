@@ -6,30 +6,28 @@ using MediatR;
 
 namespace BaseClinic.Business.Services.Appointments.Commands
 {
-    public class CheckInCommand : IRequest<CheckInResultDto>
-    {
+    public record CheckInCommand
+        (
         // Định danh người thao tác (Receptionist) lấy từ Token
-        public Guid ReceptionistId { get; set; }
-
+        Guid ReceptionistId,
         // --- Trường hợp 1: Check-in từ lịch hẹn có sẵn ---
-        public Guid? AppointmentId { get; set; }
+        Guid? AppointmentId,
+         // --- Trường hợp 2: Walk-in (Không có lịch hẹn) ---
+         // Nếu bệnh nhân cũ
+         Guid? PatientId,
+          Guid? DepartmentId,
+          // Nếu Walk-in mà bệnh nhân chưa từng tồn tại (Alternative C)
+          string? NewPatientFullName,
+          DateTime? NewPatientDob,
+          bool IsPriority,
+          QueueType Type
+        ) : IRequest<CheckInResultDto>;
 
-        // --- Trường hợp 2: Walk-in (Không có lịch hẹn) ---
-        // Nếu bệnh nhân cũ
-        public Guid? PatientId { get; set; }
-        public Guid? DepartmentId { get; set; }
-
-        // Nếu Walk-in mà bệnh nhân chưa từng tồn tại (Alternative C)
-        public string? NewPatientFullName { get; set; }
-        public DateTime? NewPatientDob { get; set; }
-        public bool IsPriority { get; set; }
-        public QueueType Type { get; set; }
-
-    }
     public class CheckInCommandHandler : IRequestHandler<CheckInCommand, CheckInResultDto>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IDepartmentRepository _departmentRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IQueueRepository _queueRepository;
         private readonly IEncounterRepository _encounterRepository;
@@ -38,6 +36,7 @@ namespace BaseClinic.Business.Services.Appointments.Commands
         public CheckInCommandHandler(
             IUnitOfWork unitOfWork,
             IAppointmentRepository appointmentRepository,
+            IDepartmentRepository departmentRepository,
             IPatientRepository patientRepository,
             IQueueRepository queueRepository,
             IEncounterRepository encounterRepository,
@@ -45,6 +44,7 @@ namespace BaseClinic.Business.Services.Appointments.Commands
         {
             _unitOfWork = unitOfWork;
             _appointmentRepository = appointmentRepository;
+            _departmentRepository = departmentRepository;
             _patientRepository = patientRepository;
             _queueRepository = queueRepository;
             _encounterRepository = encounterRepository;
@@ -147,17 +147,21 @@ namespace BaseClinic.Business.Services.Appointments.Commands
                 // --- BƯỚC 4: HOÀN TẤT TRANSACTION ---
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
+                // --- BƯỚC 5: LẤY TÊN KHOA VÀ TRẢ KẾT QUẢ ---
+                var department = await _departmentRepository.GetByIdAsync(targetDepartmentId, cancellationToken);
+                string departmentName = department?.Name ?? "Khoa không xác định";
+
                 // --- TRẢ KẾT QUẢ CHO LỄ TÂN ---
-                return new CheckInResultDto
-                {
-                    EncounterId = encounter.Id,
-                    EncounterCode = encounter.EncounterCode,
-                    QueueId = queue.Id,
-                    QueueNumber = queueEntry.QueueNumber,
-                    PatientName = targetPatientName,
-                    DepartmentName = "TODO: Tên Khoa", // Sẽ lấy từ Cache/DB sau
-                    CheckInTime = checkInTime
-                };
+                // Sử dụng cú pháp Positional Record (Ngoặc tròn) để sửa lỗi CS7036
+                return new CheckInResultDto(
+                    encounter.Id,                 // 1. EncounterId
+                    encounter.EncounterCode,      // 2. EncounterCode
+                    queue.Id,                     // 3. QueueId
+                    queueEntry.QueueNumber,       // 4. QueueNumber
+                    departmentName,               // 5. DepartmentName
+                    targetPatientName,            // 6. PatientName
+                    checkInTime                   // 7. CheckInTime
+                );
             }
             catch
             {

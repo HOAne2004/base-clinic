@@ -7,28 +7,28 @@ using System.Threading;
 
 namespace BaseClinic.Business.Services.Appointments.Commands
 {
-    public class BookAppointmentCommand : IRequest<Guid>
-    {
-        // 1. Định danh người thực hiện (Lấy từ JWT)
-        public Guid AccountId { get; set; }
+    public record BookAppointmentCommand
+    (
+         // 1. Định danh người thực hiện (Lấy từ JWT)
+         Guid AccountId,
 
-        // 2. Dữ liệu xác định bệnh nhân phụ (Nếu có)
-        public Guid? DependentPatientId { get; set; }
+         // 2. Dữ liệu xác định bệnh nhân phụ (Nếu có)
+         Guid? DependentPatientId,
 
-        // 3. Dữ liệu tạo bệnh nhân phụ mới (Nếu có)
-        public string? NewDependentFullName { get; set; }
-        public DateTime? NewDependentDob { get; set; }
-        public PatientRelationshipType? NewDependentRelationship { get; set; }
+         // 3. Dữ liệu tạo bệnh nhân phụ mới (Nếu có)
+         string? NewDependentFullName,
+         DateTime? NewDependentDob,
+         PatientRelationshipType? NewDependentRelationship,
 
-        // 4. Dữ liệu lịch hẹn
-        public Guid DepartmentId { get; set; }
-        public Guid? RequestedDoctorId { get; set; }
-        public DateTime AppointmentDate { get; set; }
-        public TimeOnly StartTime { get; set; }
-        public TimeOnly EndTime { get; set; }
-        public string Reason { get; set; } = string.Empty;
-    }
-    public class BookAppointmentCommandHander : IRequestHandler< BookAppointmentCommand,Guid>
+         // 4. Dữ liệu lịch hẹn
+         Guid DepartmentId,
+         Guid? RequestedDoctorId,
+         DateTime AppointmentDate,
+         TimeOnly StartTime,
+         TimeOnly EndTime,
+         string Reason
+    ) : IRequest<Guid>;
+    public class BookAppointmentCommandHander : IRequestHandler<BookAppointmentCommand, Guid>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPatientRepository _patientRepository;
@@ -60,7 +60,7 @@ namespace BaseClinic.Business.Services.Appointments.Commands
                 Guid targetPatientId = primaryPatient.Id;
 
                 // Bước 2: Tự suy luận luồng đặt lịch dựa vào dữ liệu đầu vào
-                if(request.DependentPatientId.HasValue)
+                if (request.DependentPatientId.HasValue)
                 {
                     // Luồng A: Đặt cho hồ sơ phụ đã tồn tại
                     var dependent = await _patientRepository.GetDependentPatientByIdAsync(request.DependentPatientId.Value, primaryPatient.Id, cancellation)

@@ -18,8 +18,17 @@ namespace BaseClinic.Domain.Constants
 
         public static class Department
         {
-            [PermissionInfo(Description = "Cho phép người dùng tạo phòng ban mới.")]
+            [PermissionInfo(Description = "Cho phép bệnh nhân / admin / lễ tân dùng xem danh sách khoa.")]
+            public const string View = "Department.View";
+
+            [PermissionInfo(Description = "Cho phép admin tạo khoa mới.")]
             public const string Create = "Department.Create";
+
+            [PermissionInfo(Description = "Cho phép admin cập nhật khoa.")]
+            public const string Update = "Department.Update";
+
+            [PermissionInfo(Description = "Cho phép admin xóa mềm khoa.")]
+            public const string Delete = "Department.Delete";
         }
         public static class Encounter
         {

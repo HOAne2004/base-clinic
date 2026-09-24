@@ -3,11 +3,8 @@ using MediatR;
 
 namespace BaseClinic.Business.Services.Roles.Commands
 {
-    public class AssignRolePermissionsCommand : IRequest<bool>
-    {
-        public Guid RoleId { get; set; }
-        public List<Guid> PermissionIds { get; set; } = new();
-    }
+    public record AssignRolePermissionsCommand (Guid RoleId, List<Guid> PermissionIds) : IRequest<bool>;
+
 
     public class AssignRolePermissionsCommandHandler : IRequestHandler<AssignRolePermissionsCommand, bool>
     {

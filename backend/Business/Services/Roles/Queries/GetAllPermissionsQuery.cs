@@ -1,12 +1,13 @@
 ﻿using BaseClinic.Business.Models;
 using BaseClinic.DataAccess;
+using BaseClinic.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.Business.Services.Roles.Queries
 {
     // Yêu cầu trả về danh sách các quyền đã được gom nhóm
-    public class GetAllPermissionsQuery : IRequest<List<PermissionGroupDto>>
+    public record GetAllPermissionsQuery : IRequest<List<PermissionGroupDto>>
     {
     }
     public class GetAllPermissionsQueryHandler : IRequestHandler<GetAllPermissionsQuery, List<PermissionGroupDto>>
@@ -24,18 +25,17 @@ namespace BaseClinic.Business.Services.Roles.Queries
 
             // Dùng LINQ để gom nhóm theo Resource
             var groupedPermissions = permissions
-                .GroupBy(p => p.Resource)
-                .Select(g => new PermissionGroupDto
-                {
-                    Resource = g.Key,
-                    Permissions = g.Select(p => new PermissionDto
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Description = p.Description
-                    }).ToList()
-                })
-                .ToList();
+         .GroupBy(p => p.Resource)
+         .Select(g => new PermissionGroupDto
+         (
+             g.Key,
+             g.Select(p => new PermissionDto
+             (
+                 p.Id,
+                 p.Name,
+                 p.Description
+             )).ToList() // .ToList() thứ nhất: Ép kiểu cho danh sách PermissionDto con
+         )).ToList();    // .ToList() THỨ HAI Ở ĐÂY: Ép kiểu cho toàn bộ PermissionGroupDto
 
             return groupedPermissions;
         }

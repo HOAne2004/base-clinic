@@ -4,10 +4,7 @@ using MediatR;
 namespace BaseClinic.Business.Services.Roles.Queries
 {
     // Yêu cầu trả về danh sách ID các quyền mà Role này đang sở hữu
-    public class GetRolePermissionsQuery : IRequest<List<Guid>>
-    {
-        public Guid RoleId { get; set; }
-    }
+    public record GetRolePermissionsQuery (Guid RoleId) : IRequest<List<Guid>>;
 
     public class GetRolePermissionsQueryHandler : IRequestHandler<GetRolePermissionsQuery, List<Guid>>
     {
