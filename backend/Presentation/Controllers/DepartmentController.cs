@@ -35,7 +35,7 @@ namespace BaseClinic.Presentation.Controllers
         [RequirePermission(SystemPermissions.Department.Update)]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDepartmentCommand command)
         {
-            command.Id = id;
+            var finalCommand = command with { Id = id };
             await _mediator.Send(command);
             return Ok(new { Message = "Cập nhật thông tin thành công." });
         }
@@ -44,7 +44,7 @@ namespace BaseClinic.Presentation.Controllers
         [RequirePermission(SystemPermissions.Department.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var command = new DeactivateDepartmentCommand { Id = id };
+            var command = new DeactivateDepartmentCommand( id );
             await _mediator.Send(command);
             return Ok(new { Message = "Đã vô hiệu hóa thành công." });
         }

@@ -33,19 +33,19 @@ namespace BaseClinic.Presentation.Controllers
             }
 
             var command = new BookAppointmentCommand
-            {
-                AccountId = accountId,
-                DependentPatientId = request.DependentPatientId,
-                NewDependentFullName = request.NewDependentFullName,
-                NewDependentDob = request.NewDependentDob,
-                NewDependentRelationship = request.NewDependentRelationship,
-                DepartmentId = request.DepartmentId,
-                RequestedDoctorId = request.RequestedDoctorId,
-                AppointmentDate = request.AppointmentDate,
-                StartTime = request.StartTime,
-                EndTime = request.EndTime,
-                Reason = request.Reason
-            };
+            (
+                accountId,
+                request.DependentPatientId,
+                request.NewDependentFullName,
+                request.NewDependentDob,
+                request.NewDependentRelationship,
+                request.DepartmentId,
+                request.RequestedDoctorId,
+                request.AppointmentDate,
+                request.StartTime,
+                request.EndTime,
+                request.Reason
+            );
 
             var appointmentId = await _mediator.Send(command);
 
@@ -78,29 +78,29 @@ namespace BaseClinic.Presentation.Controllers
             // 1. Trích xuất ID định danh của Receptionist từ JWT Token
             var accountIdClaim = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
-            if(string.IsNullOrEmpty(accountIdClaim) || !Guid.TryParse(accountIdClaim, out Guid receptionistId))
+            if (string.IsNullOrEmpty(accountIdClaim) || !Guid.TryParse(accountIdClaim, out Guid receptionistId))
             {
                 return Unauthorized(new { Message = "Token không hợp lệ hoặc không chứa thông tin định danh." });
             }
 
             // 2. Mapping sang Command
             var command = new CheckInCommand
-            {
-                ReceptionistId = receptionistId,
-                AppointmentId = request.AppointmentId,
-                PatientId = request.PatientId,
-                DepartmentId = request.DepartmentId,
-                NewPatientDob = request.NewPatientDob,
-                NewPatientFullName = request.NewPatientFullName,
-                IsPriority = request.IsPriority,
-                Type = request.Type
-            };
+            (
+                receptionistId,
+                request.AppointmentId,
+                request.PatientId,
+                request.DepartmentId,
+                request.NewPatientFullName,
+                request.NewPatientDob,
+                request.IsPriority,
+                request.Type
+            );
 
             // 3. Thực thi nghiệp vụ
             var result = await _mediator.Send(command);
 
             // 4. Trả về kết quả (thông tin để in phiếu khám)
-            return Ok(new {Message = "Check-in thành công.", Data = result});
+            return Ok(new { Message = "Check-in thành công.", Data = result });
         }
         public class CheckInRequest
         {
