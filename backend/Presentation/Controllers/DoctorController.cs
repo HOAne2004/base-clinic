@@ -1,9 +1,10 @@
-﻿using BaseClinic.Presentation.Authorization;
+﻿using BaseClinic.Business.Services.Doctors.Commands;
+using BaseClinic.Business.Services.Doctors.Queries;
 using BaseClinic.Domain.Constants;
+using BaseClinic.Presentation.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BaseClinic.Business.Services.Doctors.Commands;
 
 namespace BaseClinic.Presentation.Controllers
 {
@@ -52,6 +53,22 @@ namespace BaseClinic.Presentation.Controllers
             await _mediator.Send(new DeleteDoctorCommand(id));
 
             return Ok(new { Message = "Đã xóa bác sĩ và vô hiệu hóa tài khoản liên kết." });
+        }
+
+        [HttpGet]
+        [RequirePermission(SystemPermissions.Doctor.View)]
+        public async Task<IActionResult> GetDoctorsForAdmin()
+        {
+            var result = await _mediator.Send(new GetAllDoctorsQuery());
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/admin-detail")]
+        [RequirePermission(SystemPermissions.Doctor.Manage)]
+        public async Task<IActionResult> GetDoctorDetailForAdmin(Guid id)
+        {
+            var result = await _mediator.Send(new GetDoctorDetailForAdminQuery(id));
+            return Ok(result);
         }
     }
 }
