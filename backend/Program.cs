@@ -105,6 +105,29 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("Missing SecretKey")))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            // Hủy bỏ response 401 rỗng mặc định của ASP.NET Core
+            context.HandleResponse();
+
+            // Tự thiết lập cấu trúc ProblemDetails
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+
+            var problemDetails = new
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Chưa xác thực.",
+                Detail = "Vui lòng đăng nhập để sử dụng tính năng này."
+            };
+
+            // Ghi JSON ra luồng phản hồi
+            await context.Response.WriteAsJsonAsync(problemDetails);
+        }
+    };
 });
 
 

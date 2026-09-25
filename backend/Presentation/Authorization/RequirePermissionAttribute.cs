@@ -14,6 +14,7 @@ namespace BaseClinic.Presentation.Authorization
             Arguments = new object[] { permission };
         }
     }
+
     /// <summary>
     /// Filter thực thi logic kiểm tra JWT Token
     /// </summary>
@@ -28,25 +29,40 @@ namespace BaseClinic.Presentation.Authorization
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            // 1. Kiểm tra xem request có Token hợp lệ không (đã qua lớp [Authorize] mặc định chưa)
+            // 1. Kiểm tra xem request có Token hợp lệ không
             var user = context.HttpContext.User;
             if (user.Identity == null || !user.Identity.IsAuthenticated)
             {
-                context.Result = new UnauthorizedResult(); // Trả về 401
+                // Trả về JSON thông báo 401 thay vì UnauthorizedResult rỗng
+                context.Result = new ObjectResult(new
+                {
+                    Status = StatusCodes.Status401Unauthorized,
+                    Title = "Chưa xác thực.",
+                    Detail = "Vui lòng đăng nhập để sử dụng tính năng này."
+                })
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized
+                };
                 return;
             }
 
             // 2. Quét trong danh sách Claims của Token xem có chứa mã quyền yêu cầu không.
-            // Chú ý: Chuỗi "Permission" ở đây phải khớp tuyệt đối với Claim định nghĩa trong JwtProvider_2.cs
             bool hasPermission = user.Claims.Any(c =>
                 c.Type == "Permission" && c.Value == _permission);
 
-            // 3. Nếu không có quyền, chặn Request và trả về mã 403 Forbidden
+            // 3. Nếu không có quyền, chặn Request và trả về mã 403 Forbidden dạng JSON
             if (!hasPermission)
             {
-                context.Result = new ForbidResult();
+                context.Result = new ObjectResult(new
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Title = "Không có quyền truy cập.",
+                    Detail = $"Bạn cần quyền '{_permission}' để thực hiện thao tác này."
+                })
+                {
+                    StatusCode = StatusCodes.Status403Forbidden
+                };
             }
         }
-
     }
 }
