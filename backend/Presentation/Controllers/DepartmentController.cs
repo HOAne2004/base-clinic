@@ -25,10 +25,11 @@ namespace BaseClinic.Presentation.Controllers
         {
             var departmentId = await _mediator.Send(command);
 
-            return CreatedAtAction(
-                actionName: nameof(Create),
-                routeValues: new { id = departmentId },
-                value: new { Message = "Thêm mới khoa thành công.", Data = departmentId });
+            return Ok(new
+            {
+                Message = "Tạo mới thành công.",
+                Data = departmentId
+            });
         }
 
         [HttpPut("{id}")]
