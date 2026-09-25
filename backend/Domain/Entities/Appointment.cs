@@ -72,8 +72,10 @@ namespace BaseClinic.Domain.Entities
 
         public void Cancel(string cancelReason)
         {
-            if (Status == AppointmentStatus.Completed)
-                throw new InvalidOperationException("Không thể hủy lịch hẹn đã hoàn thành.");
+            // Chặn mọi trạng thái không hợp lệ thay vì chỉ chặn Completed
+            if (Status != AppointmentStatus.Confirmed)
+                throw new InvalidOperationException($"Không thể hủy lịch hẹn đang ở trạng thái: {Status}.");
+
             if (string.IsNullOrWhiteSpace(cancelReason))
                 throw new ArgumentException("Bắt buộc phải cung cấp lý do hủy lịch.");
 

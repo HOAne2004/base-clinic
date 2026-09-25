@@ -25,9 +25,12 @@ namespace BaseClinic.Presentation.Controllers
         [RequirePermission(SystemPermissions.Appointment.Book)] // 2. Lớp bảo vệ vòng trong: Cần chính xác quyền này
         public async Task<IActionResult> BookAppointment([FromBody] BookAppointmentRequest request)
         {
-            var accountIdClaim = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            var accountIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ??
+                                  User.FindFirst(JwtRegisteredClaimNames.Sub) ??
+                                  User.FindFirst("Id") ??
+                                  User.FindFirst("AccountId");
 
-            if (string.IsNullOrEmpty(accountIdClaim) || !Guid.TryParse(accountIdClaim, out Guid accountId))
+            if (accountIdClaim == null || !Guid.TryParse(accountIdClaim.Value, out Guid accountId))
             {
                 return Unauthorized(new { Message = "Token không hợp lệ hoặc không chứa thông tin định danh." });
             }
@@ -52,24 +55,7 @@ namespace BaseClinic.Presentation.Controllers
             return Ok(new { AppointmentId = appointmentId, Message = "Đặt lịch khám thành công." });
         }
 
-        public class BookAppointmentRequest
-        {
-            // Nhóm 1: Dành cho luồng "Đặt lịch cho người thân đã có hồ sơ"
-            public Guid? DependentPatientId { get; set; }
 
-            // Nhóm 2: Dành cho luồng "Tạo hồ sơ mới và đặt lịch cho người thân"
-            public string? NewDependentFullName { get; set; }
-            public DateTime? NewDependentDob { get; set; }
-            public PatientRelationshipType? NewDependentRelationship { get; set; }
-
-            // Nhóm 3: Thông tin chi tiết của lịch hẹn (Bắt buộc)
-            public Guid DepartmentId { get; set; }
-            public Guid? RequestedDoctorId { get; set; }
-            public DateTime AppointmentDate { get; set; }
-            public TimeOnly StartTime { get; set; }
-            public TimeOnly EndTime { get; set; }
-            public string Reason { get; set; } = string.Empty;
-        }
 
         [HttpPost("check-in")]
         [RequirePermission(SystemPermissions.Appointment.CheckIn)]
@@ -102,22 +88,58 @@ namespace BaseClinic.Presentation.Controllers
             // 4. Trả về kết quả (thông tin để in phiếu khám)
             return Ok(new { Message = "Check-in thành công.", Data = result });
         }
-        public class CheckInRequest
+
+
+        [HttpPut("{id}/cancel")]
+        [RequirePermission(SystemPermissions.Appointment.Cancel)]
+        public async Task<IActionResult> CancelAppointment(Guid id, [FromBody] CancelAppointmentRequest request)
         {
-            // Nhóm 1: Check-in theo lịch hẹn
-            public Guid? AppointmentId { get; set; }
+            var command = new CancelAppointmentCommand(id, request.CancelReason);
 
-            // Nhóm 2: Walk-in bệnh nhân cũ
-            public Guid? PatientId { get; set; }
-            public Guid? DepartmentId { get; set; }
+            await _mediator.Send(command);
 
-            // Nhóm 3: Walk-in bệnh nhân mới
-            public string? NewPatientFullName { get; set; }
-            public DateTime? NewPatientDob { get; set; }
-
-            // Cấu hình xếp hàng
-            public bool IsPriority { get; set; }
-            public QueueType Type { get; set; } = QueueType.Consultation;
+            return Ok(new { Message = "Hủy lịch hẹn thành công." });
         }
+
+
+    }
+    public class CheckInRequest
+    {
+        // Nhóm 1: Check-in theo lịch hẹn
+        public Guid? AppointmentId { get; set; }
+
+        // Nhóm 2: Walk-in bệnh nhân cũ
+        public Guid? PatientId { get; set; }
+        public Guid? DepartmentId { get; set; }
+
+        // Nhóm 3: Walk-in bệnh nhân mới
+        public string? NewPatientFullName { get; set; }
+        public DateTime? NewPatientDob { get; set; }
+
+        // Cấu hình xếp hàng
+        public bool IsPriority { get; set; }
+        public QueueType Type { get; set; } = QueueType.Consultation;
+    }
+    public class BookAppointmentRequest
+    {
+        // Nhóm 1: Dành cho luồng "Đặt lịch cho người thân đã có hồ sơ"
+        public Guid? DependentPatientId { get; set; }
+
+        // Nhóm 2: Dành cho luồng "Tạo hồ sơ mới và đặt lịch cho người thân"
+        public string? NewDependentFullName { get; set; }
+        public DateTime? NewDependentDob { get; set; }
+        public PatientRelationshipType? NewDependentRelationship { get; set; }
+
+        // Nhóm 3: Thông tin chi tiết của lịch hẹn (Bắt buộc)
+        public Guid DepartmentId { get; set; }
+        public Guid? RequestedDoctorId { get; set; }
+        public DateTime AppointmentDate { get; set; }
+        public TimeOnly StartTime { get; set; }
+        public TimeOnly EndTime { get; set; }
+        public string Reason { get; set; } = string.Empty;
+    }
+    public class CancelAppointmentRequest
+    {
+        public string CancelReason { get; set; } = string.Empty;
     }
 }
