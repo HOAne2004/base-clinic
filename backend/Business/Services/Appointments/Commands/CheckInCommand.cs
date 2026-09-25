@@ -8,19 +8,19 @@ namespace BaseClinic.Business.Services.Appointments.Commands
 {
     public record CheckInCommand
         (
-        // Định danh người thao tác (Receptionist) lấy từ Token
-        Guid ReceptionistId,
-        // --- Trường hợp 1: Check-in từ lịch hẹn có sẵn ---
-        Guid? AppointmentId,
-         // --- Trường hợp 2: Walk-in (Không có lịch hẹn) ---
-         // Nếu bệnh nhân cũ
-         Guid? PatientId,
-          Guid? DepartmentId,
-          // Nếu Walk-in mà bệnh nhân chưa từng tồn tại (Alternative C)
-          string? NewPatientFullName,
-          DateTime? NewPatientDob,
-          bool IsPriority,
-          QueueType Type
+            // Định danh người thao tác (Receptionist) lấy từ Token
+            Guid ReceptionistId,
+            // --- Trường hợp 1: Check-in từ lịch hẹn có sẵn ---
+            Guid? AppointmentId,
+            // --- Trường hợp 2: Walk-in (Không có lịch hẹn) ---
+            // Nếu bệnh nhân cũ
+            Guid? PatientId,
+            Guid? DepartmentId,
+            // Nếu Walk-in mà bệnh nhân chưa từng tồn tại (Alternative C)
+            string? NewPatientFullName,
+            DateTime? NewPatientDob,
+            bool IsPriority,
+            QueueType Type
         ) : IRequest<CheckInResultDto>;
 
     public class CheckInCommandHandler : IRequestHandler<CheckInCommand, CheckInResultDto>

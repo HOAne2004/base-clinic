@@ -11,6 +11,16 @@ namespace BaseClinic.DataAccess.Repositories
         {
             _context = context;
         }
+
+        public void Add(Role role)
+        {
+            _context.Roles.Add(role);
+        }
+
+        public void Remove(Role role)
+        {
+            _context.Roles.Remove(role);
+        }
         public async Task<Role?> GetByIdWithPermissionsAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.Roles
@@ -22,6 +32,12 @@ namespace BaseClinic.DataAccess.Repositories
         {
             return await _context.Roles
                 .FirstOrDefaultAsync(r => r.Name == name, cancellationToken);
+        }
+
+        public async Task<Role?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return await _context.Roles
+                .FirstOrDefaultAsync(r => r.Id ==id, cancellationToken);
         }
     }
 }

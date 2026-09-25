@@ -30,10 +30,10 @@ namespace BaseClinic.Business.Services.Roles.Commands
                     ?? throw new InvalidOperationException("Không tìm thấy chức danh (Role) này.");
 
                 // 2. Chặn cập nhật quyền nếu đây là System Role (như Admin gốc) để bảo vệ hệ thống
-                if (role.IsSystemRole)
-                {
-                    throw new InvalidOperationException("Không được phép thay đổi quyền của System Role.");
-                }
+                //if (role.IsSystemRole)
+                //{
+                //    throw new InvalidOperationException("Không được phép thay đổi quyền của System Role.");
+                //}
 
                 // 3. Lấy ra danh sách các PermissionId hiện tại đang nằm trong Role
                 var currentPermissonIds = role.RolePermissions.Select(rp => rp.PermissionId).ToList();

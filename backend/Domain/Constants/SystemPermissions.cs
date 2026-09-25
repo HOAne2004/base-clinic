@@ -38,7 +38,11 @@ namespace BaseClinic.Domain.Constants
             [PermissionInfo(Description = "Phiên khám hòan thành.")]
             public const string Complete = "Encounter.Complete";
         }
-
+        public static class Permission
+        {
+            [PermissionInfo(Description = "Xem danh sách và chi tiết các quyền hiện có.")]
+            public const string View = "Permission.View";
+        }
         public static class Role
         {
             [PermissionInfo(Description = "Xem danh sách và chi tiết các chức danh hiện có.")]
@@ -54,6 +58,16 @@ namespace BaseClinic.Domain.Constants
             public const string Delete = "Role.Delete";
 
         }
+
+        public static class RolePermission
+        {
+            [PermissionInfo(Description = "Xem danh sách và chi tiết các quyền theo chức danh.")]
+            public const string View = "RolePermission.View";
+
+            [PermissionInfo(Description = "Gán quyền cho chức danh.")]
+            public const string Assign = "RolePermission.Assign";
+        }
+
 
     }
 }
