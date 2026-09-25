@@ -5,6 +5,7 @@ namespace BaseClinic.Business.Interfaces
     public interface IDoctorRepository
     {
         void Add(Doctor doctor);
+        void Remove(Doctor doctor);
         Task<Doctor?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

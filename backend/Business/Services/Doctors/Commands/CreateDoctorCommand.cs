@@ -8,8 +8,22 @@ using System.Threading;
 namespace BaseClinic.Business.Services.Doctors.Commands
 {
     public record CreateDoctorCommand(
-        AccountDto Account,
-        DoctorDto Doctor
+            // Thông tin Account
+            string FullName,
+            string PhoneNumber,
+            string? Email,
+            string Password,
+
+            // Thông tin Doctor
+            Guid DepartmentId,
+            string? Avatar,
+            string? FullAddress,
+            bool? Gender,
+            DateTime? DateOfBirth,
+            string? IdentityNumber,
+            string? LicenseNumber,
+            decimal? ConsultationFee,
+            string? Description
         ) : IRequest<Guid>;
 
     public class CreateDoctorCommandHandler : IRequestHandler<CreateDoctorCommand, Guid>
@@ -45,19 +59,19 @@ namespace BaseClinic.Business.Services.Doctors.Commands
             try
             {
                 // BƯỚC 1: XÁC THỰC VÀ TẠO ACCOUNT
-                var existingAccount = await _accountRepository.GetAccountByPhoneNumberAsync(request.Account.PhoneNumber, cancellationToken);
+                var existingAccount = await _accountRepository.GetAccountByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
                 if (existingAccount != null)
                 {
                     throw new InvalidOperationException("Số điện thoại này đã được sử dụng cho một tài khoản khác.");
                 }
 
-                string hashedPassword = _passwordHasher.Hash(request.Account.Password);
+                string hashedPassword = _passwordHasher.Hash(request.Password);
 
                 var account = new Account(
-                    fullName: request.Account.FullName,
-                    email: request.Account.Email,
+                    fullName: request.FullName,
+                    email: request.Email,
                     passwordHash: hashedPassword,
-                    phoneNumber: request.Account.PhoneNumber,
+                    phoneNumber: request.PhoneNumber,
                     status: AccountStatus.Active, // Tự động active khi tạo từ Admin
                     isEmailVerified: false,
                     isPhoneNumberVerified: true // Mặc định true vì SĐT là định danh chính
@@ -80,16 +94,16 @@ namespace BaseClinic.Business.Services.Doctors.Commands
 
                 var doctor = new Doctor(
                     accountId: account.Id,
-                    departmentId: request.Doctor.DepartmentId,
+                    departmentId: request.DepartmentId,
                     doctorCode: doctorCode,
-                    avatar: request.Doctor.Avatar,
-                    fullAddress: request.Doctor.FullAddress,
-                    gender: request.Doctor.Gender,
-                    dateOfBirth: request.Doctor.DateOfBirth,
-                    identityNumber: request.Doctor.IdentityNumber,
-                    licenseNumber: request.Doctor.LicenseNumber,
-                    consultationFee: request.Doctor.ConsultationFee,
-                    description: request.Doctor.Description
+                    avatar: request.Avatar,
+                    fullAddress: request.FullAddress,
+                    gender: request.Gender,
+                    dateOfBirth: request.DateOfBirth,
+                    identityNumber: request.IdentityNumber,
+                    licenseNumber: request.LicenseNumber,
+                    consultationFee: request.ConsultationFee,
+                    description: request.Description
                 );
 
                 _doctorRepository.Add(doctor);

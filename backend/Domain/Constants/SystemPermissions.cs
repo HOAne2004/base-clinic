@@ -33,8 +33,18 @@ namespace BaseClinic.Domain.Constants
 
         public static class Doctor
         {
+            [PermissionInfo(Description = "Cho phép xem danh sách bác sĩ.")]
+            public const string View = "Doctor.View";
+
             [PermissionInfo(Description = "Cho phép admin tạo tài khoản cho bác sĩ.")]
             public const string Create = "Doctor.Create";
+
+            [PermissionInfo(Description = "Cho phép admin cập nhật thông tin bác sĩ")]
+            public const string Update = "Doctor.Update";
+
+            [PermissionInfo(Description = "Cho phép admin xóa thông tin bác sĩ.")]
+            public const string Delete = "Doctor.Delete";
+
         }
         public static class Encounter
         {

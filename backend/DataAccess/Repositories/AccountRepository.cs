@@ -42,5 +42,11 @@ namespace BaseClinic.DataAccess.Repositories
                 .Select(ar => ar.Role.Name)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<Account?> GetByIdAsync(Guid accountId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Id == accountId);
+        }
     }
 }

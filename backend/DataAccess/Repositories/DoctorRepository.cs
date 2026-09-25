@@ -18,7 +18,10 @@ namespace BaseClinic.DataAccess.Repositories
              _context.Doctors.Add(doctor);
         }
 
-
+        public void Remove(Doctor doctor)
+        {
+            _context.Doctors.Remove(doctor);
+        }
         public async Task<Doctor?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.Doctors

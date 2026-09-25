@@ -8,5 +8,6 @@ namespace BaseClinic.Business.Interfaces
         Task<Account?> GetAccountByPhoneNumberAsync(string phoneNumber, CancellationToken cancellation);
         Task<List<string>> GetRolesByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default);
         Task<List<string>> GetPermissionsByAccountIdAsync (Guid accountId, CancellationToken cancellation = default);
+        Task<Account?> GetByIdAsync(Guid accountId, CancellationToken cancelToken = default);
     }
 }
