@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -133,6 +134,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Khai báo policy CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowNextJsApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") // URL của ứng dụng Next.js
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // Bắt buộc nếu cần gửi cookie hoặc authorization header
+        });
+});
+
 
 var app = builder.Build();
 
@@ -146,6 +160,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseExceptionHandler();
+
+app.UseCors("AllowNextJsApp");
 
 app.UseAuthentication();
 
