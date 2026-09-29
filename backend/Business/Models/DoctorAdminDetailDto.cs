@@ -9,7 +9,7 @@
         string? Email,
         string DepartmentName,
         string AccountStatus,
-        DateTimeOffset? LastLoginAt, // Thêm thông tin bảo mật từ bảng Account
+        DateTimeOffset? LastLoginAt,
         string? Avatar,
         string? FullAddress,
         bool? Gender,

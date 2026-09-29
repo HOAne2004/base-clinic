@@ -1,5 +1,4 @@
 ﻿using BaseClinic.Business.Interfaces;
-using BaseClinic.DataAccess.Repositories;
 using BaseClinic.Domain.Entities;
 using BaseClinic.Domain.Enums;
 using MediatR;
@@ -9,18 +8,11 @@ namespace BaseClinic.Business.Services.Appointments.Commands
 {
     public record BookAppointmentCommand
     (
-         // 1. Định danh người thực hiện (Lấy từ JWT)
          Guid AccountId,
-
-         // 2. Dữ liệu xác định bệnh nhân phụ (Nếu có)
          Guid? DependentPatientId,
-
-         // 3. Dữ liệu tạo bệnh nhân phụ mới (Nếu có)
          string? NewDependentFullName,
          DateTime? NewDependentDob,
          PatientRelationshipType? NewDependentRelationship,
-
-         // 4. Dữ liệu lịch hẹn
          Guid DepartmentId,
          Guid? RequestedDoctorId,
          DateTime AppointmentDate,
@@ -28,60 +20,61 @@ namespace BaseClinic.Business.Services.Appointments.Commands
          TimeOnly EndTime,
          string Reason
     ) : IRequest<Guid>;
+
     public class BookAppointmentCommandHander : IRequestHandler<BookAppointmentCommand, Guid>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPatientRepository _patientRepository;
+        private readonly IPatientDelegationRepository _patientDelegationRepository;
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IPatientCodeGenerator _patientCodeGenerator;
 
         public BookAppointmentCommandHander(
             IUnitOfWork unitOfWork,
             IPatientRepository patientRepository,
+            IPatientDelegationRepository patientDelegationRepository,
             IAppointmentRepository appointmentRepository,
             IPatientCodeGenerator patientCodeGenerator)
         {
             _unitOfWork = unitOfWork;
             _patientRepository = patientRepository;
+            _patientDelegationRepository = patientDelegationRepository;
             _appointmentRepository = appointmentRepository;
             _patientCodeGenerator = patientCodeGenerator;
         }
 
         public async Task<Guid> Handle(BookAppointmentCommand request, CancellationToken cancellation)
         {
-            // Mở Transaction để đảm bảo tính toàn vẹn dữ liệu
             await _unitOfWork.BeginTransactionAsync(cancellation);
             try
             {
-                //Bước 1: Khởi tạo/Xác định hồ sơ chính
+                // Bước 1: Xác định hồ sơ chính (Dùng để đặt cho bản thân)
                 var primaryPatient = await _patientRepository.GetPrimaryPatientByAccountIdAsync(request.AccountId, cancellation)
                     ?? throw new InvalidOperationException("Tài khoản chưa được liên kết với hồ sơ bệnh nhân gốc.");
 
                 Guid targetPatientId = primaryPatient.Id;
 
-                // Bước 2: Tự suy luận luồng đặt lịch dựa vào dữ liệu đầu vào
+                // Bước 2: Tự suy luận luồng đặt lịch
                 if (request.DependentPatientId.HasValue)
                 {
-                    // Luồng A: Đặt cho hồ sơ phụ đã tồn tại
-                    var dependent = await _patientRepository.GetDependentPatientByIdAsync(request.DependentPatientId.Value, primaryPatient.Id, cancellation)
-                        ?? throw new InvalidOperationException("Hồ sơ phụ không tồn tại hoặc không phụ thuộc quyền quản lý của bạn.");
+                    // Luồng A: Đặt cho hồ sơ phụ ĐÃ TỒN TẠI VÀ ĐƯỢC CẤP QUYỀN
+                    // SỬA ĐỔI: Truyền request.AccountId thay vì primaryPatient.Id
+                    var dependent = await _patientRepository.GetDependentPatientByIdAsync(request.DependentPatientId.Value, request.AccountId, cancellation)
+                        ?? throw new InvalidOperationException("Hồ sơ phụ không tồn tại hoặc bạn chưa được cấp quyền xem hồ sơ này.");
 
                     targetPatientId = dependent.Id;
                 }
                 else if (!string.IsNullOrWhiteSpace(request.NewDependentFullName) && request.NewDependentRelationship.HasValue)
                 {
-                    // Luồng B: Khởi tạo hồ sơ phụ mới
+                    // Luồng B: Khởi tạo hồ sơ phụ MỚI
                     string patientCode = await _patientCodeGenerator.GenerateAsync(cancellation);
 
-                    // Sử dụng đúng Constructor của Patient (AccountId truyền vào bằng null)
+                    // SỬA ĐỔI: Sử dụng Constructor mới của Patient (không còn RelationshipType)
                     var newDependent = new Patient(
                         patientCode: patientCode,
                         accountId: null,
-                        fullName: request.NewDependentFullName,
-                        primaryPatientId: primaryPatient.Id,
-                        relationshipType: request.NewDependentRelationship);
+                        fullName: request.NewDependentFullName);
 
-                    // Gọi hàm UpdateProfile để cập nhật Ngày sinh (vì Constructor không nhận tham số này)
                     newDependent.UpdateProfile(
                         fullName: request.NewDependentFullName,
                         avatar: null,
@@ -92,17 +85,26 @@ namespace BaseClinic.Business.Services.Appointments.Commands
 
                     _patientRepository.Add(newDependent);
 
-                    // Bắt buộc gọi SaveChangesAsync để EF Core cấp phát ID thật cho newDependent trước khi dùng
+                    // Bắt buộc SaveChangesAsync để lấy ID của newDependent
+                    await _unitOfWork.SaveChangesAsync(cancellation);
+
+                    // Tạo giấy phép truy cập (PatientDelegation) cho người tạo
+                    var delegation = new PatientDelegation(
+                        targetPatientId: newDependent.Id,
+                        observerAccountId: request.AccountId,
+                        relationshipType: request.NewDependentRelationship.Value,
+                        status: DelegationStatus.Accepted);
+
+                    _patientDelegationRepository.AddDelegation(delegation);
                     await _unitOfWork.SaveChangesAsync(cancellation);
 
                     targetPatientId = newDependent.Id;
                 }
-                // Nếu cả 2 IF trên đều sai, targetPatientId giữ nguyên là primaryPatient.Id (Luồng C: Tự đặt cho chính mình)
 
-                // Bước 3: Re-validate booking conditions (Mock/Placeholder cho các bước 6, 9)
-                // TODO: Truy vấn DepartmentRepository và DoctorScheduleRepository để kiểm tra giờ trống, sức chứa...
+                // Bước 3: Re-validate booking conditions
+                // TODO: Logic kiểm tra giờ trống...
 
-                // Bước 4: Tạo Appointment bằng Constructor chuẩn
+                // Bước 4: Tạo Appointment
                 var appointment = new Appointment(
                     patientId: targetPatientId,
                     departmentId: request.DepartmentId,

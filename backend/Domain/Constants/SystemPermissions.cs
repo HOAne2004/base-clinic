@@ -57,6 +57,20 @@ namespace BaseClinic.Domain.Constants
             [PermissionInfo(Description = "Phiên khám hòan thành.")]
             public const string Complete = "Encounter.Complete";
         }
+        public static class Patient
+        {
+            [PermissionInfo(Description = "Cho phép admin / lễ tân / bác sĩ xem danh sách và hồ sơ bệnh nhân.")]
+            public const string View = "Patient.View";
+
+            [PermissionInfo(Description = "Cho phép lễ tân tạo hồ sơ bệnh nhân mới trực tiếp tại quầy.")]
+            public const string Create = "Patient.Create";
+
+            [PermissionInfo(Description = "Cho phép admin / lễ tân cập nhật thông tin hồ sơ bệnh nhân.")]
+            public const string Update = "Patient.Update";
+
+            [PermissionInfo(Description = "Cho phép bệnh nhân quản lý danh sách người thân và liên kết hồ sơ.")]
+            public const string ManageDelegation = "Patient.ManageDelegation";
+        }
         public static class Permission
         {
             [PermissionInfo(Description = "Xem danh sách và chi tiết các quyền hiện có.")]

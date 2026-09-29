@@ -35,11 +35,6 @@ namespace BaseClinic.DataAccess.Configurations
                 .HasForeignKey(x => x.AccountId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // Quan hệ đệ quy: Bệnh nhân phụ trỏ về Bệnh nhân chính
-            builder.HasOne<Patient>()
-                .WithMany()
-                .HasForeignKey(x => x.PrimaryPatientId)
-                .OnDelete(DeleteBehavior.Restrict); // Không cho phép xóa bệnh nhân chính nếu còn bệnh nhân phụ
         }
     }
 }

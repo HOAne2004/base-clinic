@@ -42,6 +42,7 @@ builder.Services.AddScoped<IDoctorCodeGenerator, DoctorCodeGenerator>();
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IEncounterRepository, EncounterRepository>();
 builder.Services.AddScoped<IPatientCodeGenerator, PatientCodeGenerator>();
+builder.Services.AddScoped<IPatientDelegationRepository, PatientDelegationRepository>();
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IQueueRepository, QueueRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();

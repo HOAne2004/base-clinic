@@ -15,6 +15,7 @@ namespace BaseClinic.DataAccess
         public DbSet<AccountRole> AccountRoles => Set<AccountRole>();
         public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
         public DbSet<Patient> Patients => Set<Patient>();
+        public DbSet<PatientDelegation> PatientDelegations => Set<PatientDelegation>();
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Doctor> Doctors => Set<Doctor>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
