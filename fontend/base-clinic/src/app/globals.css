@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+:root {
+  /* ================================
+     Base
+     ================================ */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  /* ================================
+     BaseClinic - Primary
+     ================================ */
+  --primary: var(--color-blue-600);
+  --primary-dark: var(--color-blue-700);
+  --primary-light: var(--color-blue-100);
+
+  /* ================================
+     BaseClinic - Secondary
+     ================================ */
+  --secondary: var(--color-teal-500);
+  --secondary-dark: var(--color-teal-600);
+  --secondary-light: var(--color-teal-100);
+
+  /* ================================
+     Text
+     ================================ */
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  /* ================================
+     Surface
+     ================================ */
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+
+  /* ================================
+     Semantic
+     ================================ */
+  --success: var(--color-green-600);
+  --warning: var(--color-amber-500);
+  --error: var(--color-red-600);
+  --info: var(--color-blue-500);
+
+  /* ================================
+     Appointment Status
+     ================================ */
+  --status-pending: var(--color-amber-500);
+  --status-confirmed: var(--color-blue-600);
+  --status-checked-in: var(--color-teal-500);
+  --status-completed: var(--color-green-600);
+  --status-cancelled: var(--color-red-600);
+
+  /* ================================
+     Border
+     ================================ */
+  --border: #e2e8f0;
+  --border-muted: #f1f5f9;
+
+  /* ================================
+     Glassmorphism
+     ================================ */
+  --glass-bg: rgba(255, 255, 255, 0.3);
+  --glass-blur: 10px;
+  --glass-radius: 15px;
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  --glass-blur: blur(10px);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@theme inline {
+  /* ================================
+     Colors
+     ================================ */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-dark: var(--secondary-dark);
+  --color-secondary-light: var(--secondary-light);
+
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-light: var(--text-light);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+
+  --color-status-pending: var(--status-pending);
+  --color-status-confirmed: var(--status-confirmed);
+  --color-status-checked-in: var(--status-checked-in);
+  --color-status-completed: var(--status-completed);
+  --color-status-cancelled: var(--status-cancelled);
+
+  --color-border: var(--border);
+  --color-border-muted: var(--border-muted);
+
+  /* ================================
+     Fonts
+     ================================ */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
+  border: var(--glass-border);
+}
+
