@@ -19,6 +19,10 @@ namespace BaseClinic.Domain.Entities
         public int FailedLoginAttempts { get; private set; } = 0;
         public DateTimeOffset? LockoutEnd { get; private set; }
 
+        // Refresh Token
+        public string? RefreshTokenHash { get; private set; }
+        public DateTimeOffset? RefreshTokenExpiryTime { get; private set; }
+
         // Navigation property (Chỉ cho phép đọc từ bên ngoài)
         private readonly List<AccountRole> _accountRoles = new();
         public IReadOnlyCollection<AccountRole> AccountRoles => _accountRoles.AsReadOnly();
@@ -121,6 +125,18 @@ namespace BaseClinic.Domain.Entities
             {
                 _accountRoles.Remove(role);
             }
+        }
+
+        public void UpdateRefreshToken(string refreshTokenHash, DateTimeOffset expiryTime)
+        {
+            RefreshTokenHash = refreshTokenHash;
+            RefreshTokenExpiryTime = expiryTime;
+        }
+
+        public void RevokeRefreshToken()
+        {
+            RefreshTokenHash = null;
+            RefreshTokenExpiryTime = null;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BaseClinic.Business.Models;
+using System.Security.Claims;
 
 namespace BaseClinic.Business.Interfaces
 {
@@ -9,5 +10,6 @@ namespace BaseClinic.Business.Interfaces
         DateTime GetRefreshTokenExpiry();
         DateTime GetAccessTokenExpiry();
         string HashToken(string token);
+        ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
     }
 }

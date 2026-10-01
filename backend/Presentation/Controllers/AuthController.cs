@@ -1,6 +1,8 @@
 ﻿using BaseClinic.Business.Services.Auth.Commands;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 
 namespace BaseClinic.Presentation.Controllers
@@ -26,9 +28,30 @@ namespace BaseClinic.Presentation.Controllers
             var result = await _mediator.Send(command);
             return Ok(result);
         }
-        [HttpPost("logout")]
-        public IActionResult Logout()
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command)
         {
+            try
+            {
+                var result = await _mediator.Send(command);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            // Lấy ID người dùng hiện tại từ Token
+            var accountIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(accountIdStr, out Guid accountId))
+            {
+                await _mediator.Send(new LogoutCommand(accountId));
+            }
             return Ok(new { Message = "Đăng xuất thành công." });
         }
     }

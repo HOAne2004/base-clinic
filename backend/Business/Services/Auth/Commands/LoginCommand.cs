@@ -13,15 +13,18 @@ namespace BaseClinic.Business.Services.Auth.Commands
         private readonly IAccountRepository _accountRepository;
         private readonly IJwtProvider _jwtProvider;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IUnitOfWork _unitOfWork;
 
         public LoginCommandHandler(
             IAccountRepository accountRepository,
             IJwtProvider jwtProvider,
-            IPasswordHasher passwordHasher)
+            IPasswordHasher passwordHasher,
+            IUnitOfWork unitOfWork)
         {
             _accountRepository = accountRepository;
             _jwtProvider = jwtProvider;
             _passwordHasher = passwordHasher;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<AuthResultDto> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -55,6 +58,17 @@ namespace BaseClinic.Business.Services.Auth.Commands
 
             // Bước 5: Gọi hàm đúc Token
             string accessToken = _jwtProvider.GenerateAccessToken(tokenUser);
+            string refreshToken = _jwtProvider.GenerateRefreshToken();
+
+            // Buoc 6: Băm RefreshToken để bảo mật và cập nhật vào Account
+            string hashedRefreshToken = _jwtProvider.HashToken(refreshToken);
+            account.UpdateRefreshToken(hashedRefreshToken, _jwtProvider.GetRefreshTokenExpiry());
+
+            // Buoc 7: Ghi vết đăng nhập
+            account.RecordLogin(DateTimeOffset.UtcNow);
+
+            // Buoc 8: Luu thay doi
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var userInfo = new AccountPublicInfoDto(
             account.Id,
@@ -67,7 +81,7 @@ namespace BaseClinic.Business.Services.Auth.Commands
             roles.ToList()
         );
 
-            return new AuthResultDto(accessToken, userInfo);
+            return new AuthResultDto(accessToken,refreshToken, userInfo);
         }
     }
 }

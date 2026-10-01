@@ -79,5 +79,33 @@ namespace BaseClinic.DataAccess.Repositories
 
             return Convert.ToHexString(hash);
         }
+
+        public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidIssuer = _jwtOptions.Issuer,
+                ValidAudience = _jwtOptions.Audience,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key)),
+                ValidateLifetime = false // CỐT LÕI: Tắt kiểm tra hạn sử dụng
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            // ValidateToken sẽ ném lỗi nếu token bị sửa đổi hoặc chữ ký sai (dù ValidateLifetime = false)
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+
+            // Xác nhận thêm một bước bảo mật: Đảm bảo thuật toán mã hóa khớp với lúc tạo (HmacSha512)
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512Signature, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Token không hợp lệ.");
+            }
+
+            return principal;
+        }
     }
 }

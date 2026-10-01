@@ -2,6 +2,7 @@
 {
     public record AuthResultDto(
         string AccessToken,
+        string RefreshToken,
         AccountPublicInfoDto User
     );
 }
