@@ -11,6 +11,8 @@ import { toast } from 'react-toastify';
 
 import {formatPhone} from "@/src/lib/utils/format-phone";
 
+import { useAuth } from "@/src/contexts/AuthContext";
+
 type Props = {
     onSuccess?: () => void;
 }
@@ -18,6 +20,7 @@ type Props = {
 export function LoginForm({ onSuccess }: Props) {
     // 1. GỌI TẤT CẢ HOOKS Ở TRÊN CÙNG
     const router = useRouter();
+    const { login } = useAuth(); // Lấy hàm login từ AuthContext
     const [phoneNumber, setPhoneNumber] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -44,13 +47,13 @@ export function LoginForm({ onSuccess }: Props) {
         try {
             const response = await authApi.login({ phoneNumber, password });
             console.log("Result: ", response);
-            localStorage.setItem("accessToken", response.token);
+            login(response.accessToken, response.refreshToken, response.user); // Lưu token và user vào AuthContext
             toast.success("Đăng nhập thành công.");
             setPhoneNumber("");
             setPassword("");
             setError("");
+            // Đóng modal và chuyển hướng về trang chủ
             onSuccess?.();
-            // Gọi hàm này để báo cho component cha tắt modal đi
             router.push("/");
         } catch (error) {
             setError("Đăng nhập thất bại.");

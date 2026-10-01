@@ -10,7 +10,7 @@ interface AuthContextType {
     user: UserProfile | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (token: string, user: UserProfile) => void;
+    login: (accessToken: string, refreshToken: string, user: UserProfile) => void;
     logout: () => void;
 }
 
@@ -59,18 +59,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Hàm gọi khi đăng nhập thành công từ LoginForm
-    const login = (token: string, userData: UserProfile) => {
-        TokenService.setToken(token);
+    const login = (accessToken: string, refreshToken: string, userData: UserProfile) => {
+        TokenService.setToken(accessToken);
+        TokenService.setRefreshToken(refreshToken);
         TokenService.setUser(userData);
         setUser(userData);
     };
 
     // Hàm gọi khi người dùng bấm Đăng xuất
     const logout = () => {
-        TokenService.removeToken();
-        TokenService.removeUser();
+        TokenService.clearAll();
         setUser(null);
-        // Có thể đẩy về trang chủ hoặc trang đăng nhập tuỳ bạn
         router.push("/");
     };
 

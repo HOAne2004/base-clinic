@@ -27,4 +27,19 @@ export const TokenService = {
     },
     setUser: (user: UserProfile) => localStorage.setItem("user", JSON.stringify(user)),
     removeUser: () => localStorage.removeItem("user"),
+
+    // 3. Quản lý Refresh Token
+    getRefreshToken: () => {
+        if (typeof window === "undefined") return null;
+        return localStorage.getItem("refreshToken");
+    },
+    setRefreshToken: (token: string) => localStorage.setItem("refreshToken", token),
+    removeRefreshToken: () => localStorage.removeItem("refreshToken"),
+
+    // 4. Tạo hàm xóa sạch mọi thứ cho tiện
+    clearAll: () => {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+    }
 };

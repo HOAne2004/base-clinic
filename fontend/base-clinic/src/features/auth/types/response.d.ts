@@ -13,5 +13,6 @@ export interface AccountPublicInfoResponse {
 // Map tương đương với AuthResultDto của Backend
 export interface LoginResponse {
     accessToken: string;
+    refreshToken: string;
     user: AccountPublicInfoResponse;
 }
