@@ -6,9 +6,9 @@ using MediatR;
 namespace BaseClinic.Business.Services.Auth.Commands
 {
     public record LoginCommand
-        ( string PhoneNumber, string Password): IRequest<string>;
-    
-    public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
+        (string PhoneNumber, string Password) : IRequest<AuthResultDto>;
+
+    public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResultDto>
     {
         private readonly IAccountRepository _accountRepository;
         private readonly IJwtProvider _jwtProvider;
@@ -24,7 +24,7 @@ namespace BaseClinic.Business.Services.Auth.Commands
             _passwordHasher = passwordHasher;
         }
 
-        public async Task<string> Handle(LoginCommand request, CancellationToken cancellationToken)
+        public async Task<AuthResultDto> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
             // Bước 1: Tìm Account theo số điện thoại 
             var account = await _accountRepository.GetAccountByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
@@ -56,7 +56,18 @@ namespace BaseClinic.Business.Services.Auth.Commands
             // Bước 5: Gọi hàm đúc Token
             string accessToken = _jwtProvider.GenerateAccessToken(tokenUser);
 
-            return accessToken;
+            var userInfo = new AccountPublicInfoDto(
+            account.Id,
+            account.FullName,
+            account.Email,
+            account.PhoneNumber,
+            account.Status,
+            account.IsEmailVerified,
+            account.IsPhoneNumberVerified,
+            roles.ToList()
+        );
+
+            return new AuthResultDto(accessToken, userInfo);
         }
     }
 }
