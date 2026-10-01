@@ -102,7 +102,42 @@ namespace BaseClinic.Business.Services.Appointments.Commands
                 }
 
                 // Bước 3: Re-validate booking conditions
-                // TODO: Logic kiểm tra giờ trống...
+                // 3.1. Kiểm tra thời gian không được nằm trong quá khứ
+                // (Giả định AppointmentDate lưu ngày, StartTime lưu giờ)
+                var appointmentDateTime = request.AppointmentDate.Date.Add(request.StartTime.ToTimeSpan());
+                if (appointmentDateTime < DateTime.Now)
+                {
+                    throw new InvalidOperationException("Không thể đặt lịch cho thời điểm trong quá khứ.");
+                }
+
+                // 3.2. Bệnh nhân không được phép có lịch khám khác trùng giờ (tránh double-booking)
+                bool isPatientBusy = await _appointmentRepository.HasOverlappingAppointmentAsync(
+                    patientId: targetPatientId,
+                    date: request.AppointmentDate,
+                    startTime: request.StartTime,
+                    endTime: request.EndTime,
+                    cancellationToken: cancellation);
+
+                if (isPatientBusy)
+                {
+                    throw new InvalidOperationException("Hồ sơ bệnh nhân này đã có một lịch hẹn khác trong cùng khoảng thời gian.");
+                }
+
+                // 3.3. Nếu có chỉ định đích danh bác sĩ, kiểm tra xem bác sĩ có rảnh không
+                if (request.RequestedDoctorId.HasValue)
+                {
+                    bool isDoctorBusy = await _appointmentRepository.HasOverlappingDoctorAppointmentAsync(
+                        doctorId: request.RequestedDoctorId.Value,
+                        date: request.AppointmentDate,
+                        startTime: request.StartTime,
+                        endTime: request.EndTime,
+                        cancellationToken: cancellation);
+
+                    if (isDoctorBusy)
+                    {
+                        throw new InvalidOperationException("Bác sĩ được yêu cầu đã kín lịch vào thời gian này. Vui lòng chọn khung giờ hoặc bác sĩ khác.");
+                    }
+                }
 
                 // Bước 4: Tạo Appointment
                 var appointment = new Appointment(
