@@ -1,26 +1,49 @@
 'use client'
 
 import { useState } from "react"
-import { LoginForm } from "@/src/features/auth/components/LoginForm";
+import { LoginForm } from "@/src/features/auth/components/LoginForm"
+import Modal from "@/src/components/ui/Modal"
 
 export default function PatientHeader() {
-    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false)
 
     return (
-        <header className="flex glass justify-between items-center p-2">
-            <div className="flex justify-center items-center gap-2">
-                <img className="w-8 h-auto" src="./favicon.ico"></img>
-                <h1 className="font-bold  text-2xl ">Base Clinic</h1>
+        <header className="glass sticky top-0 z-40 w-full">
+            <div className="flex items-center justify-between gap-2 px-8 py-2">
+
+                {/* Brand: logo + tên */}
+                <div className="flex min-w-0 items-center gap-2">
+                    <img
+                        src="/favicon.ico"
+                        alt="Base Clinic"
+                        className="h-7 w-7 shrink-0 sm:h-8 sm:w-8"
+                    />
+                    <h1 className="truncate font-bold text-base sm:text-xl lg:text-2xl">
+                        Base Clinic
+                    </h1>
+                </div>
+
+                {/* Hotline — ẩn trên mobile nhỏ, hiện từ sm trở lên */}
+                <span className="hidden whitespace-nowrap text-sm text-text-muted sm:inline lg:text-base">
+                    Hotline: <strong className="text-text">1900.0000</strong>
+                </span>
+
+                {/* Nút đăng nhập */}
+                <button
+                    onClick={() => setShowLoginModal(true)}
+                    className="btn shrink-0 bg-primary px-3 py-2 text-sm text-white hover:bg-primary-dark sm:px-4 sm:text-base"
+                >
+                    Đăng nhập
+                </button>
             </div>
 
-            <span>Hotline: 1900.0000</span>
-            <button
-                onClick={() => setShowLoginModal(true)}
-                className="mb-6 text-2xl font-bold"
-            >Đăng nhập</button>
-            <LoginForm
+            <Modal
                 show={showLoginModal}
-                onHide={() => setShowLoginModal(false)} />
+                onHide={() => setShowLoginModal(false)}
+                title="Đăng nhập"
+            >
+                <LoginForm onSuccess={() => setShowLoginModal(false)} />
+            </Modal>
         </header>
     )
 }

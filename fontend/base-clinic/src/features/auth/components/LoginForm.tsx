@@ -2,52 +2,33 @@
 
 import { FormEvent, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPhone, faLock, faSpinner, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+
 import { authApi } from "../api/auth.api";
 import { toast } from 'react-toastify';
 
-type ModalProps = {
-    show: boolean,
-    onHide: () => void,
-    keyboard?: boolean,
-    backdrop?: 'static' | true,
+import {formatPhone} from "@/src/lib/utils/format-phone";
+
+type Props = {
+    onSuccess?: () => void;
 }
 
-export function LoginForm({ show, onHide, keyboard = true, backdrop = true }: ModalProps) {
+export function LoginForm({ onSuccess }: Props) {
     // 1. GỌI TẤT CẢ HOOKS Ở TRÊN CÙNG
     const router = useRouter();
     const [phoneNumber, setPhoneNumber] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
+    // 2. GỌI CÁC HOOKS useEffect() Ở DƯỚI
     useEffect(() => {
-        if (!show || !keyboard) return;
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onHide();
-        };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [show, keyboard, onHide]);
-
-    useEffect(() => {
-        if (show) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [show]);
-
-    // 2. ĐẶT LỆNH RETURN SỚM Ở DƯỚI CÙNG (SAU KHI ĐÃ GỌI HẾT HOOKS)
-    if (!show) return null;
-
-    const handleBackdropClick = () => {
-        if (backdrop === 'static') return;
-        onHide();
-    };
-
+        // Reset error khi người dùng gõ lại
+        if (error) setError("");
+    }, [phoneNumber, password]);
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setLoading(true);
@@ -68,11 +49,12 @@ export function LoginForm({ show, onHide, keyboard = true, backdrop = true }: Mo
             setPhoneNumber("");
             setPassword("");
             setError("");
-            onHide();
+            onSuccess?.();
             // Gọi hàm này để báo cho component cha tắt modal đi
             router.push("/");
         } catch (error) {
-            setError(error instanceof Error ? error.message : "Đăng nhập thất bại.");
+            setError("Đăng nhập thất bại.");
+            console.error("Error: ", error);
             toast.error("Có lỗi xảy ra, vui lòng thử lại.");
         } finally {
             setLoading(false);
@@ -80,54 +62,74 @@ export function LoginForm({ show, onHide, keyboard = true, backdrop = true }: Mo
     }
 
     return (
-        <div
-            className="fixed inset-0 z-50 bg-black/50 p-4 flex justify-center items-center"
-            onClick={handleBackdropClick}>
-
-            {/* Thêm onClick={(e) => e.stopPropagation()} để click vào trong form không bị đóng modal */}
-            <div className="bg-white p-6 rounded-lg w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-bold text-xl">Đăng nhập</h2>
-                    <button className="btn text-4xl leading-none" onClick={onHide}>&times;</button>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {/* Phone number */}
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Số điện thoại
+                </label>
+                <div className="relative">
+                    <FontAwesomeIcon
+                        icon={faPhone}
+                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                        type="text"
+                        value={formatPhone(phoneNumber)}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="098..."
+                        className="input-base pl-10 text-xl"
+                    />
                 </div>
-
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Số điện thoại
-                        </label>
-                        <input
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)} // Fix: Phải có onChange thì mới gõ được chữ
-                            type="text" 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="098..."
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Mật khẩu
-                        </label>
-                        <input
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            type="password"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Nhập mật khẩu"
-                        />
-                    </div>
-
-                    {error && <p className="text-red-500 text-sm">{error}</p>}
-
-                    <button
-                        disabled={loading}
-                        className="btn bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed py-2 rounded-md"
-                        type='submit'>
-                        {loading ? 'Đang gửi...' : 'Đăng nhập'}
-                    </button>
-                </form>
             </div>
-        </div>
-    )
+
+            {/* Password */}
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Mật khẩu
+                </label>
+                <div className="relative">
+                    <FontAwesomeIcon
+                        icon={faLock}
+                        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Nhập mật khẩu"
+                        className="input-base pl-10 text-xl"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                        {showPassword ? (
+                            <FontAwesomeIcon icon={faEye} />
+                        ) : (
+                            <FontAwesomeIcon icon={faEyeSlash} />
+                        )}
+                    </button>
+                </div>
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            <button
+                type="submit"
+                disabled={loading}
+                className="btn bg-primary py-2 text-white hover:bg-primary-dark"
+            >
+                {loading ? (
+                    <>
+                        <FontAwesomeIcon icon={faSpinner} spin className="h-4 w-4" />
+                        Đang gửi...
+                    </>
+                ) : (
+                    "Đăng nhập"
+                )}
+            </button>
+        </form>
+    );
 }
