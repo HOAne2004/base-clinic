@@ -14,10 +14,11 @@ namespace BaseClinic.Domain.Entities
         public string? IdentityNumber { get; private set; }
         public bool? Gender { get; private set; }
         public DateTime? DateOfBirth { get; private set; }
+        public bool? IsPrimary { get; private set; }
 
         private Patient() { }
 
-        public Patient(string patientCode, Guid? accountId, string fullName)
+        public Patient(string patientCode, Guid? accountId, string fullName, bool isPrimary)
         {
             if (string.IsNullOrWhiteSpace(patientCode))
                 throw new ArgumentException("Mã bệnh nhân không được để trống.");
@@ -25,6 +26,7 @@ namespace BaseClinic.Domain.Entities
             PatientCode = patientCode;
             AccountId = accountId;
             SetFullName(fullName);
+            IsPrimary = isPrimary;
         }
 
         public void UpdateProfile(string fullName, string? avatar, string? fullAddress, string? identityNumber, bool? gender, DateTime? dateOfBirth)

@@ -102,7 +102,7 @@ namespace BaseClinic.Business.Services.Appointments.Commands
                     {
                         // Walk-in nhưng chưa có hồ sơ (Tạo mới)
                         string patientCode = await _patientCodeGenerator.GenerateAsync(cancellationToken);
-                        var newPatient = new Patient(patientCode, null, request.NewPatientFullName);
+                        var newPatient = new Patient(patientCode, null, request.NewPatientFullName, true);
                         newPatient.UpdateProfile(request.NewPatientFullName, null, null, null, null, request.NewPatientDob);
 
                         _patientRepository.Add(newPatient);

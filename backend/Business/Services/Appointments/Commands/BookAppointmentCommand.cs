@@ -69,11 +69,11 @@ namespace BaseClinic.Business.Services.Appointments.Commands
                     // Luồng B: Khởi tạo hồ sơ phụ MỚI
                     string patientCode = await _patientCodeGenerator.GenerateAsync(cancellation);
 
-                    // SỬA ĐỔI: Sử dụng Constructor mới của Patient (không còn RelationshipType)
                     var newDependent = new Patient(
                         patientCode: patientCode,
                         accountId: null,
-                        fullName: request.NewDependentFullName);
+                        fullName: request.NewDependentFullName,
+                        isPrimary: false);
 
                     newDependent.UpdateProfile(
                         fullName: request.NewDependentFullName,

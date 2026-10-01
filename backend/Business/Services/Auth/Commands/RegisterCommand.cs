@@ -46,7 +46,8 @@ namespace BaseClinic.Business.Services.Auth.Commands
                     phoneNumber: request.PhoneNumber,
                     status: AccountStatus.Active,
                     isEmailVerified: false,
-                    isPhoneNumberVerified: false); //[cite: 23]
+                    isPhoneNumberVerified: false);
+                
 
                 // --- BƯỚC 2: GÁN ROLE "Patient" CHO ACCOUNT ---
                 // Cần truy vấn để lấy ID của Role Patient từ database thay vì fix cứng Guid
@@ -54,7 +55,7 @@ namespace BaseClinic.Business.Services.Auth.Commands
                     ?? throw new InvalidOperationException($"Hệ thống bị thiếu System Role cốt lõi: {SystemRoles.Patient}. Vui lòng kiểm tra lại quá trình Seeding cơ sở dữ liệu.");
 
                 // Gọi method Domain để gán quyền (Tự động thêm vào danh sách _accountRoles)
-                account.AssignRole(patientRole.Id); //[cite: 23]
+                account.AssignRole(patientRole.Id); 
 
                 _accountRepository.Add(account);
 
@@ -65,7 +66,8 @@ namespace BaseClinic.Business.Services.Auth.Commands
                 var patient = new Patient(
                     patientCode: patientCode,
                     accountId: account.Id,
-                    fullName: request.FullName);
+                    fullName: request.FullName,
+                    isPrimary: true);
 
                 _patientRepository.Add(patient);
 

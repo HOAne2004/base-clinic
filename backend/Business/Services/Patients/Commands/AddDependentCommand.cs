@@ -79,7 +79,8 @@ namespace BaseClinic.Business.Services.Patients.Commands
                     var newDependent = new Patient(
                         patientCode: patientCode,
                         accountId: null, // Chưa có tài khoản
-                        fullName: request.FullName);
+                        fullName: request.FullName,
+                        isPrimary: false);
 
                     newDependent.UpdateProfile(
                         fullName: request.FullName,
