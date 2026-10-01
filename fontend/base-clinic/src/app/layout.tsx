@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+
+// Config FontAwesome để không tự động thêm CSS, vì chúng ta đã import styles.css thủ công
+import { config } from '@fortawesome/fontawesome-svg-core'
+import '@fortawesome/fontawesome-svg-core/styles.css'
+config.autoAddCss = false
+
 import { ToastContainer } from "react-toastify";
 
 import PatientHeader from "../components/layout/PatientHeader";
