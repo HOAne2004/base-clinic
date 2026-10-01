@@ -23,8 +23,8 @@ namespace BaseClinic.Presentation.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginCommand command)
         {
-            var token = await _mediator.Send(command);
-            return Ok(new { Token = token, Message = "Đăng nhập thành công." });
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
         [HttpPost("logout")]
         public IActionResult Logout()
