@@ -9,15 +9,13 @@ export default function LoginPage() {
     return (
         <main className="mx-auto max-w-md px-4 py-10">
             <button
-            onClick={() => setShowLoginModal(true)}
-             className="mb-6 text-2xl font-bold">
+                onClick={() => setShowLoginModal(true)}
+                className="mb-6 text-2xl font-bold"
+            >
                 Đăng nhập
             </button>
 
-            <LoginForm 
-            show = {showLoginModal}
-            onHide={() => setShowLoginModal(false)}
-            />
+            {showLoginModal && <LoginForm />}
         </main>
     );
 }

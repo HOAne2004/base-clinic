@@ -64,7 +64,6 @@
   --glass-blur: 10px;
   --glass-radius: 15px;
   --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  --glass-blur: blur(10px);
   --glass-border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
