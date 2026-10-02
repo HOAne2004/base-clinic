@@ -24,8 +24,8 @@ export default function PatientHeader() {
         router.push("/"); // Chuyển hướng về trang chủ sau khi đăng xuất
     }
     return (
-        <header className="glass sticky top-0 z-40 w-full">
-            <div className="flex items-center justify-between gap-2 px-8 py-2">
+        <header className="sticky top-0 z-40 w-full">
+            <div className="flex items-center justify-between gap-2 px-8 py-2 glass">
 
                 {/* Brand: logo + tên */}
                 <button onClick={() => router.push("/")} className="flex min-w-0 items-center gap-2 cursor-pointer">
