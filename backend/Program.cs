@@ -35,6 +35,9 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Login
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<BaseClinic.Presentation.Middlewares.GlobalExceptionHandler>();
 
+// Đăng ký HttpContextAccessor (Cốt lõi để lấy được thông tin từ HTTP Request)
+builder.Services.AddHttpContextAccessor();
+
 // Đăng ký Repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
@@ -47,6 +50,8 @@ builder.Services.AddScoped<IPatientDelegationRepository, PatientDelegationReposi
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IQueueRepository, QueueRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // 1. Đăng ký UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();

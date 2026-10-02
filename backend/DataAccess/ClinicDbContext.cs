@@ -1,4 +1,6 @@
-﻿using BaseClinic.Domain.Entities;
+﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Domain.Common;
+using BaseClinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -6,8 +8,10 @@ namespace BaseClinic.DataAccess
 {
     public class ClinicDbContext : DbContext
     {
-        public ClinicDbContext(DbContextOptions<ClinicDbContext> options) : base(options)
+        private readonly ICurrentUserService _currentUserService;
+        public ClinicDbContext(DbContextOptions<ClinicDbContext> options, ICurrentUserService currentUserService) : base(options)
         {
+            _currentUserService = currentUserService;
         }
         public DbSet<Account> Accounts => Set<Account>();
         public DbSet<Role> Roles => Set<Role>();
@@ -35,6 +39,36 @@ namespace BaseClinic.DataAccess
             
             modelBuilder.ApplyConfigurationsFromAssembly(
              typeof(ClinicDbContext).Assembly);
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var currentUserId = _currentUserService.AccountId;
+            var currentTime = DateTimeOffset.UtcNow;
+
+            // Quét các entity kế thừa từ AuditableEntity đang được thêm hoặc sửa
+            foreach (var entry in ChangeTracker.Entries<AuditableEntity>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        // Dùng .Property().CurrentValue vì các thuộc tính này có protected setter
+                        entry.Property(x => x.CreatedAt).CurrentValue = currentTime;
+                        entry.Property(x => x.CreatedBy).CurrentValue = currentUserId;
+                        break;
+
+                    case EntityState.Modified:
+                        entry.Property(x => x.UpdatedAt).CurrentValue = currentTime;
+                        entry.Property(x => x.UpdatedBy).CurrentValue = currentUserId;
+
+                        // Đảm bảo không vô tình ghi đè CreatedAt/CreatedBy khi update
+                        entry.Property(x => x.CreatedAt).IsModified = false;
+                        entry.Property(x => x.CreatedBy).IsModified = false;
+                        break;
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
         }
     }
 }

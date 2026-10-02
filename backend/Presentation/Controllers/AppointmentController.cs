@@ -1,12 +1,13 @@
 ﻿using BaseClinic.Business.Services.Appointments.Commands;
+using BaseClinic.Business.Services.Appointments.Queries;
+using BaseClinic.Domain.Constants;
 using BaseClinic.Domain.Enums;
 using BaseClinic.Presentation.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
-using BaseClinic.Domain.Constants;
+using System.Security.Claims;
 
 namespace BaseClinic.Presentation.Controllers
 {
@@ -101,6 +102,90 @@ namespace BaseClinic.Presentation.Controllers
             return Ok(new { Message = "Hủy lịch hẹn thành công." });
         }
 
+        [HttpGet("my")]
+        [RequirePermission(SystemPermissions.Appointment.View)]
+                public async Task<IActionResult> GetMyAppointments(
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] AppointmentStatus? status,
+            CancellationToken cancellationToken)
+        {
+            var query = new GetMyAppointmentsQuery(
+                fromDate,
+                toDate,
+                status);
+
+            var result = await _mediator.Send(
+                query,
+                cancellationToken);
+
+            return Ok(result);
+        }
+
+        [HttpGet("{patientId}/appointments")]
+        [RequirePermission(SystemPermissions.Appointment.View)]
+        public async Task<IActionResult> GetPatientAppointments(
+            Guid patientId,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] AppointmentStatus? status,
+            CancellationToken cancellationToken)
+        {
+            var query = new GetPatientAppointmentsQuery(
+                patientId,
+                fromDate,
+                toDate,
+                status);
+
+            var result = await _mediator.Send(
+                query,
+                cancellationToken);
+
+            return Ok(result);
+        }
+
+        [HttpGet("{id}")]
+        [RequirePermission(SystemPermissions.Appointment.View)]
+        public async Task<IActionResult> GetAppointmentDetail(
+            Guid id,
+            CancellationToken cancellationToken)
+        {
+            var query = new GetAppointmentByIdQuery(id);
+
+            var result = await _mediator.Send(query, cancellationToken);
+
+            if (result == null)
+            {
+                return NotFound(new { Message = "Không tìm thấy thông tin lịch hẹn." });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [RequirePermission(SystemPermissions.Appointment.View)]
+        public async Task<IActionResult> GetAppointments(
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] Guid? departmentId,
+            [FromQuery] Guid? doctorId,
+            [FromQuery] Guid? patientId,
+            [FromQuery] AppointmentStatus? status,
+            CancellationToken cancellationToken) 
+        {
+            var query = new GetAppointmentsQuery(
+                fromDate,
+                toDate,
+                departmentId,
+                doctorId,
+                patientId,
+                status);
+
+            // Mediator truyền thẳng Token xuống DB để tối ưu tài nguyên
+            var result = await _mediator.Send(query, cancellationToken);
+
+            return Ok(result);
+        }
 
     }
     public class CheckInRequest
