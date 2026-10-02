@@ -182,3 +182,45 @@ body {
    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
    }
 }
+
+@layer components {
+  /* =========================================================
+     Aurora Background — nền gradient + blob mờ 2 góc
+     Dùng cho <section> bao ngoài
+     ========================================================= */
+  .aurora-bg {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+      to bottom right,
+      var(--primary-light),
+      var(--background),
+      var(--secondary-light)
+    );
+  }
+
+  /* Blob chung — chỉ định vị trí qua class phụ */
+  .aurora-blob {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 9999px;
+    filter: blur(64px);          /* tương đương blur-3xl */
+    opacity: 0.6;
+  }
+
+  /* Vị trí blob */
+  .aurora-blob--top-right {
+    top: -6rem;
+    right: -6rem;
+    height: 18rem;
+    width: 18rem;
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+  }
+  .aurora-blob--bottom-left {
+    bottom: -6rem;
+    left: -6rem;
+    height: 18rem;
+    width: 18rem;
+    background: color-mix(in srgb, var(--secondary) 15%, transparent);
+  }
+}
