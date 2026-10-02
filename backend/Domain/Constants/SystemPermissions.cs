@@ -6,101 +6,104 @@ namespace BaseClinic.Domain.Constants
     {
         public static class Appointment
         {
-            [PermissionInfo(Description = "Cho phép người dùng tạo lịch hẹn khám mới.")]
+            [PermissionInfo(Description = "Tạo lịch hẹn khám bệnh mới vào hệ thống.")]
             public const string Book = "Appointment.Book";
 
-            [PermissionInfo(Description = "Cho phép lễ tân check-in khi bệnh nhân đến.")]
+            [PermissionInfo(Description = "Xác nhận check-in khi bệnh nhân đến phòng khám.")]
             public const string CheckIn = "Appointment.CheckIn";
 
-            [PermissionInfo(Description = "Cho phép người dùng, lễ tân hoặc bác sĩ hủy lịch.")]
+            [PermissionInfo(Description = "Hủy lịch hẹn khám bệnh theo các điều kiện nghiệp vụ được phép.")]
             public const string Cancel = "Appointment.Cancel";
+
+            [PermissionInfo(Description = "Xem danh sách và chi tiết lịch hẹn khám bệnh.")]
+            public const string View = "Appointment.View";
         }
 
         public static class Department
         {
-            [PermissionInfo(Description = "Cho phép bệnh nhân / admin / lễ tân dùng xem danh sách khoa.")]
+            [PermissionInfo(Description = "Xem danh sách và thông tin chi tiết khoa khám.")]
             public const string View = "Department.View";
 
-            [PermissionInfo(Description = "Cho phép admin tạo khoa mới.")]
+            [PermissionInfo(Description = "Tạo khoa khám bệnh mới.")]
             public const string Create = "Department.Create";
 
-            [PermissionInfo(Description = "Cho phép admin cập nhật khoa.")]
+            [PermissionInfo(Description = "Cập nhật thông tin khoa khám bệnh.")]
             public const string Update = "Department.Update";
 
-            [PermissionInfo(Description = "Cho phép admin xóa mềm khoa.")]
+            [PermissionInfo(Description = "Xóa hoặc vô hiệu hóa khoa khám bệnh.")]
             public const string Delete = "Department.Delete";
         }
 
         public static class Doctor
         {
-            [PermissionInfo(Description = "Cho phép admin xem chi tiết thông tin bảo mật và quản lý toàn diện hồ sơ bác sĩ.")]
+            [PermissionInfo(Description = "Quản lý toàn diện hồ sơ và thông tin bảo mật của bác sĩ.")]
             public const string Manage = "Doctor.Manage";
 
-            [PermissionInfo(Description = "Cho phép admin / lễ tân xem danh sách bác sĩ.")]
+            [PermissionInfo(Description = "Xem danh sách và thông tin cơ bản của bác sĩ.")]
             public const string View = "Doctor.View";
 
-            [PermissionInfo(Description = "Cho phép admin tạo tài khoản cho bác sĩ.")]
+            [PermissionInfo(Description = "Tạo hồ sơ và tài khoản bác sĩ mới.")]
             public const string Create = "Doctor.Create";
 
-            [PermissionInfo(Description = "Cho phép admin cập nhật thông tin bác sĩ")]
+            [PermissionInfo(Description = "Cập nhật thông tin hồ sơ bác sĩ.")]
             public const string Update = "Doctor.Update";
 
-            [PermissionInfo(Description = "Cho phép admin xóa thông tin bác sĩ.")]
+            [PermissionInfo(Description = "Xóa hồ sơ và vô hiệu hóa tài khoản bác sĩ.")]
             public const string Delete = "Doctor.Delete";
-
         }
+
         public static class Encounter
         {
-            [PermissionInfo(Description = "Bắt đầu phiên khám bệnh.")]
+            [PermissionInfo(Description = "Bắt đầu phiên khám bệnh mới.")]
             public const string Start = "Encounter.Start";
 
-            [PermissionInfo(Description = "Phiên khám hòan thành.")]
+            [PermissionInfo(Description = "Hoàn thành phiên khám bệnh và chốt hồ sơ.")] // Đã sửa lỗi chính tả từ bản gốc
             public const string Complete = "Encounter.Complete";
         }
+
         public static class Patient
         {
-            [PermissionInfo(Description = "Cho phép admin / lễ tân / bác sĩ xem danh sách và hồ sơ bệnh nhân.")]
+            [PermissionInfo(Description = "Xem danh sách và chi tiết hồ sơ bệnh nhân trong phạm vi được phép.")]
             public const string View = "Patient.View";
 
-            [PermissionInfo(Description = "Cho phép lễ tân tạo hồ sơ bệnh nhân mới trực tiếp tại quầy.")]
+            [PermissionInfo(Description = "Tạo hồ sơ bệnh nhân mới vào hệ thống.")]
             public const string Create = "Patient.Create";
 
-            [PermissionInfo(Description = "Cho phép admin / lễ tân cập nhật thông tin hồ sơ bệnh nhân.")]
+            [PermissionInfo(Description = "Cập nhật thông tin hồ sơ bệnh nhân.")]
             public const string Update = "Patient.Update";
 
-            [PermissionInfo(Description = "Cho phép bệnh nhân quản lý danh sách người thân và liên kết hồ sơ.")]
+            [PermissionInfo(Description = "Quản lý danh sách người phụ thuộc và ủy quyền liên kết hồ sơ.")]
             public const string ManageDelegation = "Patient.ManageDelegation";
         }
+
         public static class Permission
         {
-            [PermissionInfo(Description = "Xem danh sách và chi tiết các quyền hiện có.")]
+            [PermissionInfo(Description = "Xem danh sách và chi tiết các quyền hiện có trong hệ thống.")]
             public const string View = "Permission.View";
         }
+
         public static class Role
         {
             [PermissionInfo(Description = "Xem danh sách và chi tiết các chức danh hiện có.")]
             public const string View = "Role.View";
 
-            [PermissionInfo(Description = "Tạo mới chức danh.")]
+            [PermissionInfo(Description = "Tạo mới chức danh vào hệ thống.")]
             public const string Create = "Role.Create";
 
-            [PermissionInfo(Description = "Cập nhật thông tin và thay đổi phân quyền của chức danh.")]
+            [PermissionInfo(Description = "Cập nhật thông tin và cấu hình của chức danh.")]
             public const string Update = "Role.Update";
 
-            [PermissionInfo(Description = "Xóa chức danh (chỉ áp dụng với các role không phải của hệ thống).")]
+            [PermissionInfo(Description = "Xóa chức danh (không áp dụng với các chức danh hệ thống mặc định).")]
             public const string Delete = "Role.Delete";
-
         }
 
         public static class RolePermission
         {
-            [PermissionInfo(Description = "Xem danh sách và chi tiết các quyền theo chức danh.")]
+            [PermissionInfo(Description = "Xem danh sách cấu hình quyền của từng chức danh.")]
             public const string View = "RolePermission.View";
 
-            [PermissionInfo(Description = "Gán quyền cho chức danh.")]
+            [PermissionInfo(Description = "Gán hoặc thu hồi quyền truy cập cho chức danh.")]
             public const string Assign = "RolePermission.Assign";
         }
-
-
     }
 }
