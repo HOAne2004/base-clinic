@@ -71,5 +71,14 @@ namespace BaseClinic.Domain.Entities
         {
             LicenseNumber = licenseNumber?.Trim();
         }
+        // Đổi khoa
+        public void UpdateDepartment(Guid departmentId)
+        {
+            if (departmentId == Guid.Empty)
+                throw new ArgumentException("DepartmentId không hợp lệ.", nameof(departmentId));
+
+            DepartmentId = departmentId;
+            UpdatedAt = DateTimeOffset.UtcNow;
+        }
     }
 }
