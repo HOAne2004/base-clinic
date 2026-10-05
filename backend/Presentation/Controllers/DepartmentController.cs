@@ -37,7 +37,7 @@ namespace BaseClinic.Presentation.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDepartmentCommand command)
         {
             var finalCommand = command with { Id = id };
-            await _mediator.Send(command);
+            await _mediator.Send(finalCommand);
             return Ok(new { Message = "Cập nhật thông tin thành công." });
         }
 
