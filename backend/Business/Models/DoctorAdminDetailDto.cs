@@ -3,6 +3,7 @@
     public record DoctorAdminDetailDto(
         Guid Id,
         Guid AccountId,
+        Guid DepartmentId,
         string DoctorCode,
         string FullName,
         string PhoneNumber,
