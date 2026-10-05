@@ -4,7 +4,7 @@ using MediatR;
 
 namespace BaseClinic.Business.Services.Departments.Commands
 {
-    public record CreateDeparementCommand 
+    public record CreateDeparementCommand
         (string Name,
         string DepartmentCode,
         string? ImageUrl,
@@ -25,7 +25,7 @@ namespace BaseClinic.Business.Services.Departments.Commands
         public async Task<Guid> Handle(CreateDeparementCommand request, CancellationToken cancellation)
         {
             bool isExist = await _departmentRepository.IsCodeExistAsync(request.DepartmentCode, cancellation);
-            if (!isExist)
+            if (isExist)
             {
                 throw new InvalidOperationException($"Mã khoa '{request.DepartmentCode}' đã tồn tại trong hệ thống.");
             }
