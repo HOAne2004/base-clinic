@@ -3,6 +3,7 @@ using BaseClinic.Business.Services.Auth.Commands;
 using BaseClinic.Business.Settings;
 using BaseClinic.DataAccess;
 using BaseClinic.DataAccess.Repositories;
+using BaseClinic.Presentation.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -11,34 +12,43 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ============================================================
+// 1. ĐĂNG KÝ CÁC DỊCH VỤ CỐT LÕI (Infrastructure Services)
+// ============================================================
 
+// 1.1. Controllers + MemoryCache
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-// Configure the database connection
+// 1.2. HttpContextAccessor — cần thiết để truy cập HttpContext từ service (ví dụ CurrentUserService)
+builder.Services.AddHttpContextAccessor();
+
+// 1.3. Problem Details — chuẩn hóa response lỗi theo RFC 7807
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+// ============================================================
+// 2. CẤU HÌNH DATABASE (EF Core)
+// ============================================================
 builder.Services.AddDbContext<ClinicDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     sqlOptions =>
     {
-        // Trỏ đến project chứa file DbContext nếu nó khác với project Web khởi chạy
+        // Chỉ định assembly chứa Migrations (tránh lỗi khi DbContext nằm ở project khác)
         sqlOptions.MigrationsAssembly(typeof(ClinicDbContext).Assembly.FullName);
     }));
 
-// Đăng ký MediatR
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(LoginCommand).Assembly));
+// ============================================================
+// 3. ĐĂNG KÝ MEDIATR (CQRS)
+// ============================================================
+builder.Services.AddMediatR(cfg => 
+    cfg.RegisterServicesFromAssembly(typeof(LoginCommand).Assembly));
 
-// Kích hoạt chuẩn Problem Details của .NET
-builder.Services.AddProblemDetails();
-builder.Services.AddExceptionHandler<BaseClinic.Presentation.Middlewares.GlobalExceptionHandler>();
+// ============================================================
+// 4. ĐĂNG KÝ REPOSITORIES & UNIT OF WORK (DI)
+// ============================================================
 
-// Đăng ký HttpContextAccessor (Cốt lõi để lấy được thông tin từ HTTP Request)
-builder.Services.AddHttpContextAccessor();
-
-// Đăng ký Repositories
+// 4.1. Đăng ký Repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
@@ -51,58 +61,34 @@ builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IQueueRepository, QueueRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
+// 4.2. Các service dùng chung
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-// 1. Đăng ký UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// 2. Đăng ký cấu hình JwtOptions từ appsettings.json (Dùng cho JwtProvider của dự án cũ)
-// Giả định class JwtOptions của bạn có hằng số SectionName = "JwtSettings"
+// ============================================================
+// 5. CẤU HÌNH AUTHENTICATION / AUTHORIZATION
+// ============================================================
+
+// 5.1. Bind cấu hình JwtOptions từ appsettings.json
+
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtSettings"));
 
-// 3. Đăng ký các Service xử lý Auth
+// 5.2. Đăng ký các service phục vụ Auth
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
-// 4. Cấu hình Swagger
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme.",
-        Name = "Authorization",           // Header name phải là Authorization
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,   // Dùng Http scheme
-        Scheme = "bearer",                // Chữ 'bearer' viết thường
-        BearerFormat = "JWT"
-    });
+// 5.3. Cấu hình Authentication với JwtBearer
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
-
-// 5. Đăng ký cấu hình Authentication và JwtBearer
 builder.Services.AddAuthentication(options =>
 {
+    // Đặt JwtBearer làm scheme mặc định cho cả Authenticate / Challenge / Forbid
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
-    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -115,6 +101,7 @@ builder.Services.AddAuthentication(options =>
             Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? throw new InvalidOperationException("Missing SecretKey")))
     };
 
+    // Tùy chỉnh response 401 để trả về ProblemDetails thay vì body rỗng
     options.Events = new JwtBearerEvents
     {
         OnChallenge = async context =>
@@ -139,7 +126,13 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Khai báo policy CORS
+// 5.4. Authorization — khai báo tường minh để dễ mở rộng policy sau này
+builder.Services.AddAuthorization();
+
+// ============================================================
+// 6. CẤU HÌNH CORS
+// ============================================================
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowNextJsApp",
@@ -152,28 +145,78 @@ builder.Services.AddCors(options =>
         });
 });
 
+// ============================================================
+// 7. CẤU HÌNH SWAGGER / OPENAPI
+// ============================================================
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    // Định nghĩa scheme Bearer để Swagger UI hiện nút "Authorize"
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme.",
+        Name = "Authorization",           // Header name phải là Authorization
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,   // Dùng Http scheme
+        Scheme = "bearer",                // Chữ 'bearer' viết thường
+        BearerFormat = "JWT"
+    });
+
+    // Yêu cầu scheme Bearer cho toàn bộ endpoint (Swagger UI sẽ tự đính token)
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
+// ============================================================
+// BUILD APP
+// ============================================================
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ============================================================
+// 8. CẤU HÌNH HTTP REQUEST PIPELINE (Middleware)
+// ============================================================
+
+// 8.1. Swagger chỉ bật ở môi trường Development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// 8.2. Redirect HTTP → HTTPS
 app.UseHttpsRedirection();
 
+// 8.3. Exception Handler — đặt sớm để bắt mọi exception từ các middleware phía sau
 app.UseExceptionHandler();
 
+// 8.4. CORS — phải chạy TRƯỚC Authentication/Authorization
 app.UseCors("AllowNextJsApp");
 
+// 8.5. Authentication & Authorization
 app.UseAuthentication();
-
 app.UseAuthorization();
 
+// 8.6. Map Controllers (đồng thời thêm routing)
 app.MapControllers();
 
+// ============================================================
+// 9. MIGRATE DATABASE + SEED DỮ LIỆU KHI KHỞI ĐỘNG
+// ============================================================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
