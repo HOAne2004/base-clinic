@@ -3,7 +3,6 @@ using MediatR;
 
 namespace BaseClinic.Business.Services.Doctors.Commands
 {
-    // Làm phẳng các thuộc tính, không bọc qua DoctorDto
     public record UpdateDoctorCommand(
         Guid Id,
         string? Avatar,
@@ -13,7 +12,8 @@ namespace BaseClinic.Business.Services.Doctors.Commands
         string? IdentityNumber,
         string? LicenseNumber,
         decimal? ConsultationFee,
-        string? Description
+        string? Description,
+        Guid? DepartmentId         
     ) : IRequest<bool>;
 
     public class UpdateDoctorCommandHandler : IRequestHandler<UpdateDoctorCommand, bool>
@@ -45,8 +45,13 @@ namespace BaseClinic.Business.Services.Doctors.Commands
 
             doctor.UpdateLicenseNumber(request.LicenseNumber);
 
-            // Ép kiểu an toàn (tránh lỗi biên dịch)
             doctor.UpdateConsultationFee(request.ConsultationFee ?? 0);
+
+            // Cập nhật khoa nếu có truyền lên
+            if (request.DepartmentId.HasValue && request.DepartmentId.Value != Guid.Empty)
+            {
+                doctor.UpdateDepartment(request.DepartmentId.Value);
+            }
 
             await _unitOfWork.SaveChangesAsync(cancellation);
 
