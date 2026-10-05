@@ -27,6 +27,7 @@ public class GetDoctorDetailForAdminQueryHandler : IRequestHandler<GetDoctorDeta
                     select new DoctorAdminDetailDto(
                         d.Id,
                         d.AccountId,
+                        d.DepartmentId,
                         d.DoctorCode,
                         a.FullName,
                         a.PhoneNumber,
