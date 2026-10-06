@@ -1,8 +1,11 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Services;
 using BaseClinic.Business.Services.Auth.Commands;
 using BaseClinic.Business.Settings;
 using BaseClinic.DataAccess;
 using BaseClinic.DataAccess.Repositories;
+using BaseClinic.DataAccess.Services;
+using BaseClinic.DataAccess.UnitOfWork;
 using BaseClinic.Presentation.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -48,7 +51,13 @@ builder.Services.AddMediatR(cfg =>
 // 4. ĐĂNG KÝ REPOSITORIES & UNIT OF WORK (DI)
 // ============================================================
 
-// 4.1. Đăng ký Repositories
+// 4.1. Các service dùng chung
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// 4.2. Đăng ký Repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
@@ -61,9 +70,7 @@ builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IQueueRepository, QueueRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
-// 4.2. Các service dùng chung
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 
 // ============================================================
 // 5. CẤU HÌNH AUTHENTICATION / AUTHORIZATION
