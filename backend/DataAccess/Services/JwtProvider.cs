@@ -8,7 +8,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BaseClinic.DataAccess.Repositories
+namespace BaseClinic.DataAccess.Services
 {
     public class JwtProvider : IJwtProvider
     {

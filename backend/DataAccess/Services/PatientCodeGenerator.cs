@@ -1,7 +1,7 @@
 ﻿using BaseClinic.Business.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace BaseClinic.DataAccess.Repositories
+namespace BaseClinic.DataAccess.Services
 {
     public class PatientCodeGenerator : IPatientCodeGenerator
     {
