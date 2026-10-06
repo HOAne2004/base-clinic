@@ -1,4 +1,4 @@
-﻿namespace BaseClinic.Presentation.Middlewares
+﻿namespace BaseClinic.Domain.Exeptions
 {
     /// <summary>
     /// [DOMAIN EXCEPTION: LỖI NGHIỆP VỤ LÕI]

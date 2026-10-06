@@ -1,4 +1,4 @@
-﻿namespace BaseClinic.Presentation.Middlewares
+﻿namespace BaseClinic.Domain.Exeptions
 {
     public class ForbiddenException : Exception
     {

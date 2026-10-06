@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
+using BaseClinic.Domain.Exeptions;
 
 namespace BaseClinic.Presentation.Middlewares
 {
@@ -58,6 +59,12 @@ namespace BaseClinic.Presentation.Middlewares
                 problemDetails.Title = "Lỗi xác thực.";
                 problemDetails.Status = StatusCodes.Status401Unauthorized;
                 problemDetails.Detail = exception.Message;
+            }
+            else if (exception is NotFoundException notFoundException)
+            {
+                problemDetails.Title = "Không tìm thấy dữ liệu.";
+                problemDetails.Status = StatusCodes.Status404NotFound;
+                problemDetails.Detail = notFoundException.Message;
             }
             else
             {
