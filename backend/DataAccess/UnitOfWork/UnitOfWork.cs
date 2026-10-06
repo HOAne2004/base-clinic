@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BaseClinic.DataAccess.Repositories
+namespace BaseClinic.DataAccess.UnitOfWork
 {
     public class UnitOfWork : IUnitOfWork
     {
