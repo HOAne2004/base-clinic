@@ -204,6 +204,7 @@ namespace BaseClinic.Domain.Entities
         {
             SetPasswordHash(newPasswordHash);
             MustChangePasswordOnNextLogin = false;
+            RevokeAllRefreshTokens("Phiên bản đăng nhập hết hạn.");
         }
 
         // ==================== VERIFICATION ====================
@@ -239,6 +240,7 @@ namespace BaseClinic.Domain.Entities
             DeactivatedAt = DateTimeOffset.UtcNow;
             DeactivatedBy = deactivatedBy;
             DeactivationReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+            RevokeAllRefreshTokens("Tài khoản bị vô hiệu hóa.");
         }
 
         /// <summary>Khôi phục tài khoản đã deactivate.</summary>
