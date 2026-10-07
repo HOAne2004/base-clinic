@@ -4,7 +4,7 @@ using System;
 
 namespace BaseClinic.Domain.Entities
 {
-    public class Encounter : AggregateRoot
+    public class Encounter : FullAuditedEntity
     {
         public string EncounterCode { get; private set; } = null!;
         public Guid PatientId { get; private set; }

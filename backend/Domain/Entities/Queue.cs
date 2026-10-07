@@ -3,7 +3,7 @@ using BaseClinic.Domain.Enums;
 
 namespace BaseClinic.Domain.Entities
 {
-    public class Queue : AggregateRoot
+    public class Queue : FullAuditedEntity
     {
         public Guid DepartmentId { get; private set; }
         public string QueueCode { get; private set; } = null!;

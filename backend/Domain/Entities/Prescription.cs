@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace BaseClinic.Domain.Entities
 {
-    public class Prescription : AggregateRoot
+    public class Prescription : FullAuditedEntity
     {
         public Guid ConsultationId { get; private set; }
         public string PrescriptionCode { get; private set; } = string.Empty;

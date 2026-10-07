@@ -2,7 +2,7 @@
 
 namespace BaseClinic.Domain.Entities
 {
-    public class Medicine : AggregateRoot
+    public class Medicine : FullAuditedEntity
     {
         public string Name { get; private set; } = string.Empty;
         public string MedicineCode { get; private set; } = string.Empty;

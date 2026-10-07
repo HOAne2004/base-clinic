@@ -4,8 +4,12 @@ using System;
 
 namespace BaseClinic.Domain.Entities
 {
-    public class DoctorSchedule : AggregateRoot
+    public class DoctorSchedule : FullAuditedEntity
     {
+        private const int MinSlotDuration = 5;
+        private const int MaxSlotDuration = 120;
+        private const int MaxBookableDaysAhead = 90;
+
         public Guid DoctorId { get; private set; }
         public DateTime WorkDate { get; private set; }
         public DateTime StartTime { get; private set; }
@@ -15,43 +19,54 @@ namespace BaseClinic.Domain.Entities
         public int OnlineBookingCapacity { get; private set; }
         public DoctorScheduleStatus Status { get; private set; }
 
-        private DoctorSchedule() { } // Dành cho ORM
+        private DoctorSchedule() { }
 
         public DoctorSchedule(Guid doctorId, DateTime workDate, DateTime startTime, DateTime endTime,
                               int slotDurationMinutes, int maxPatientPerSlot, int onlineBookingCapacity)
         {
             if (doctorId == Guid.Empty)
-                throw new ArgumentException("DoctorId không hợp lệ.", nameof(doctorId));
+                throw new ArgumentException("DoctorId không hợp lệ.");
 
             DoctorId = doctorId;
-
             ValidateAndSetScheduleTime(workDate, startTime, endTime, slotDurationMinutes);
             ValidateAndSetCapacity(maxPatientPerSlot, onlineBookingCapacity);
 
-            Status = DoctorScheduleStatus.Available; // Trạng thái mặc định khi tạo mới
+            Status = DoctorScheduleStatus.Available;
         }
 
-        public void UpdateSchedule(DateTime startTime, DateTime endTime, int slotDurationMinutes,
-                                   int maxPatientPerSlot, int onlineBookingCapacity)
+        public void UpdateSchedule(DateTime startTime, DateTime endTime,
+                                   int slotDurationMinutes, int maxPatientPerSlot, int onlineBookingCapacity)
         {
-            // Chỉ cho phép sửa nếu lịch chưa bắt đầu hoặc chưa hoàn thành
-            if (Status == DoctorScheduleStatus.Completed || Status == DoctorScheduleStatus.Cancelled)
-                throw new InvalidOperationException("Không thể sửa đổi lịch đã kết thúc hoặc đã hủy.");
+            if (Status is DoctorScheduleStatus.Completed or DoctorScheduleStatus.Cancelled)
+                throw new InvalidOperationException("Không thể sửa lịch đã kết thúc hoặc đã hủy.");
 
             ValidateAndSetScheduleTime(WorkDate, startTime, endTime, slotDurationMinutes);
             ValidateAndSetCapacity(maxPatientPerSlot, onlineBookingCapacity);
         }
 
-        private void ValidateAndSetScheduleTime(DateTime workDate, DateTime startTime, DateTime endTime, int slotDurationMinutes)
+        private void ValidateAndSetScheduleTime(DateTime workDate, DateTime startTime,
+                                                DateTime endTime, int slotDurationMinutes)
         {
+            var today = DateTime.UtcNow.Date;
+
+            if (workDate.Date < today)
+                throw new ArgumentException("Ngày làm việc không thể ở quá khứ.");
+
+            if (workDate.Date > today.AddDays(MaxBookableDaysAhead))
+                throw new ArgumentException($"Chỉ có thể tạo lịch trong vòng {MaxBookableDaysAhead} ngày tới.");
+
             if (startTime >= endTime)
-                throw new ArgumentException("Thời gian bắt đầu phải diễn ra trước thời gian kết thúc.");
+                throw new ArgumentException("Thời gian bắt đầu phải trước thời gian kết thúc.");
 
             if (startTime.Date != workDate.Date || endTime.Date != workDate.Date)
-                throw new ArgumentException("Thời gian ca khám phải nằm trong cùng ngày làm việc (WorkDate).");
+                throw new ArgumentException("Ca khám phải nằm trong cùng ngày làm việc.");
 
-            if (slotDurationMinutes <= 0)
-                throw new ArgumentException("Thời lượng mỗi slot khám phải lớn hơn 0 phút.");
+            if (slotDurationMinutes < MinSlotDuration || slotDurationMinutes > MaxSlotDuration)
+                throw new ArgumentException($"Thời lượng slot phải từ {MinSlotDuration} đến {MaxSlotDuration} phút.");
+
+            var totalMinutes = (endTime - startTime).TotalMinutes;
+            if (totalMinutes % slotDurationMinutes != 0)
+                throw new ArgumentException("Tổng thời gian ca phải chia hết cho thời lượng slot.");
 
             WorkDate = workDate.Date;
             StartTime = startTime;
@@ -62,18 +77,19 @@ namespace BaseClinic.Domain.Entities
         private void ValidateAndSetCapacity(int maxPatient, int onlineCapacity)
         {
             if (maxPatient < 0) throw new ArgumentException("Số bệnh nhân tối đa không được âm.");
-            if (onlineCapacity < 0) throw new ArgumentException("Số lượng đặt lịch online không được âm.");
-            if (onlineCapacity > maxPatient) throw new ArgumentException("Số lượng đặt online không thể vượt quá sức chứa tối đa của slot.");
+            if (onlineCapacity < 0) throw new ArgumentException("Số lượng đặt online không được âm.");
+            if (onlineCapacity > maxPatient)
+                throw new ArgumentException("Số lượng đặt online không thể vượt quá sức chứa tối đa.");
 
             MaxPatientPerSlot = maxPatient;
             OnlineBookingCapacity = onlineCapacity;
         }
 
-        // --- QUẢN LÝ TRẠNG THÁI NGHIỆP VỤ ---
+        // ==== TRẠNG THÁI ====
         public void MarkAsFull()
         {
             if (Status != DoctorScheduleStatus.Available)
-                throw new InvalidOperationException("Chỉ có thể chuyển sang Full từ trạng thái Available.");
+                throw new InvalidOperationException("Chỉ có thể chuyển sang Full từ Available.");
             Status = DoctorScheduleStatus.Full;
         }
 
@@ -87,7 +103,7 @@ namespace BaseClinic.Domain.Entities
         public void CompleteSchedule()
         {
             if (Status == DoctorScheduleStatus.Cancelled)
-                throw new InvalidOperationException("Không thể hoàn thành lịch đã bị hủy.");
+                throw new InvalidOperationException("Không thể hoàn thành lịch đã hủy.");
             Status = DoctorScheduleStatus.Completed;
         }
     }

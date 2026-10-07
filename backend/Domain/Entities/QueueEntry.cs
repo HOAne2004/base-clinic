@@ -3,7 +3,7 @@ using BaseClinic.Domain.Enums;
 
 namespace BaseClinic.Domain.Entities
 {
-    public class QueueEntry : BaseEntity
+    public class QueueEntry : Entity
     {
         public Guid QueueId { get; private set; }
         public Guid EncounterId { get; private set; }

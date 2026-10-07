@@ -3,7 +3,7 @@ using BaseClinic.Domain.Enums;
 
 namespace BaseClinic.Domain.Entities
 {
-    public class Appointment : AggregateRoot
+    public class Appointment : FullAuditedEntity
     {
         public Guid PatientId { get; private set; }
         public Guid? DepartmentId { get; private set; }

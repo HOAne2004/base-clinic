@@ -2,7 +2,7 @@
 
 namespace BaseClinic.Domain.Entities
 {
-    public class PrescriptionItem : BaseEntity
+    public class PrescriptionItem : Entity
     {
         public Guid PrescriptionId { get; private set; }
         public Guid MedicineId { get; private set; }
