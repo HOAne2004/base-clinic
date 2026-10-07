@@ -1,4 +1,4 @@
-﻿namespace BaseClinic.Domain.Exeptions
+﻿namespace BaseClinic.Domain.Exceptions
 {
     /// <summary>
     /// [DOMAIN EXCEPTION: LỖI NGHIỆP VỤ LÕI]

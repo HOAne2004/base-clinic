@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
-using BaseClinic.Domain.Exeptions;
+using BaseClinic.Domain.Exceptions;
 
 namespace BaseClinic.Presentation.Middlewares
 {

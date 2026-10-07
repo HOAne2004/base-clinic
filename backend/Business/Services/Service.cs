@@ -1,6 +1,6 @@
 ﻿using BaseClinic.Business.Interfaces;
 using BaseClinic.Domain.Common;
-using BaseClinic.Domain.Exeptions;
+using BaseClinic.Domain.Exceptions;
 using System.ComponentModel;
 using System.Reflection;
 

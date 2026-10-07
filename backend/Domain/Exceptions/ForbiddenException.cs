@@ -1,4 +1,4 @@
-﻿namespace BaseClinic.Domain.Exeptions
+﻿namespace BaseClinic.Domain.Exceptions
 {
     public class ForbiddenException : Exception
     {
