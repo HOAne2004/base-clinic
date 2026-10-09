@@ -1,12 +1,20 @@
 ﻿using BaseClinic.Business.Interfaces;
-using BaseClinic.Business.Models;
-using BaseClinic.DataAccess;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Business.Interfaces.Services;
+using BaseClinic.Business.Models.Account;
+using BaseClinic.Business.Models.Auth;
+using BaseClinic.Domain.Entities;
+using BaseClinic.Domain.Enums;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Auth.Commands
 {
-    public record LoginCommand
-        (string PhoneNumber, string Password) : IRequest<AuthResultDto>;
+    public record LoginCommand(
+        string PhoneNumber,
+        string Password,
+        string? IpAddress = null,
+        string? DeviceInfo = null
+    ) : IRequest<AuthResultDto>;
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResultDto>
     {
@@ -29,59 +37,109 @@ namespace BaseClinic.Business.Services.Auth.Commands
 
         public async Task<AuthResultDto> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
-            // Bước 1: Tìm Account theo số điện thoại 
-            var account = await _accountRepository.GetAccountByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
+            // ==================== BƯỚC 1: Tìm Account ====================
+            var account = await _accountRepository
+                .GetByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
 
             if (account == null)
-                throw new UnauthorizedAccessException("Tài khoản hoặc mật khẩu không chính xác.");
+                throw new UnauthorizedAccessException(
+                    "Số điện thoại hoặc mật khẩu không chính xác.");
 
-            // Bước 2: Xác thực mật khẩu thông qua IPasswordHasher
+            // ==================== BƯỚC 2: Check lockout ====================
+            if (account.IsLockedOut())
+            {
+                var remaining = account.LockoutEnd!.Value - DateTimeOffset.UtcNow;
+                throw new UnauthorizedAccessException(
+                    $"Tài khoản đang bị khóa do nhập sai quá nhiều lần. " +
+                    $"Vui lòng thử lại sau {Math.Ceiling(remaining.TotalMinutes)} phút.");
+            }
+
+            // ==================== BƯỚC 3: Check status ====================
+            if (account.Status == AccountStatus.Suspended)
+                throw new UnauthorizedAccessException(
+                    "Tài khoản đã bị tạm ngưng. Vui lòng liên hệ quản trị viên.");
+
+            if (account.Status == AccountStatus.Inactive)
+                throw new UnauthorizedAccessException(
+                    "Tài khoản chưa được kích hoạt. Vui lòng xác thực SĐT trước.");
+
+
+            // ==================== BƯỚC 4: Verify password ====================
             bool isPasswordValid = _passwordHasher.Verify(request.Password, account.PasswordHash);
             if (!isPasswordValid)
-                throw new UnauthorizedAccessException("Tài khoản hoặc mật khẩu không chính xác.");
+            {
+                account.RecordFailedLogin(
+                    request.IpAddress, request.DeviceInfo, "Sai mật khẩu");
 
-            // Bước 3: Nếu mật khẩu đúng, gọi Repository để lấy danh sách Roles và Permissions
-            var roles = await _accountRepository.GetRolesByAccountIdAsync(account.Id, cancellationToken);
-            var permissions = await _accountRepository.GetPermissionsByAccountIdAsync(account.Id, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Bước 4: Khởi tạo model TokenUser 
-            var tokenUser = new TokenUser
-            (
+                var remainingAttempts = 5 - account.FailedLoginAttempts;
+                if (remainingAttempts > 0)
+                    throw new UnauthorizedAccessException(
+                        $"Số điện thoại hoặc mật khẩu không chính xác. " +
+                        $"Còn {remainingAttempts} lần thử.");
+                else
+                    throw new UnauthorizedAccessException(
+                        "Tài khoản đã bị khóa 15 phút do nhập sai quá nhiều lần.");
+            }
+
+            // ==================== BƯỚC 5: Lấy roles ====================
+            var roles = await _accountRepository
+                .GetRoleCodesByAccountIdAsync(account.Id, cancellationToken);
+
+            // ==================== BƯỚC 6: Sinh refresh token ====================
+            string refreshToken = _jwtProvider.GenerateRefreshToken();
+            string hashedRefreshToken = _jwtProvider.HashToken(refreshToken);
+
+            var refreshTokenEntity = new RefreshToken(
+                accountId: account.Id,
+                tokenHash: hashedRefreshToken,
+                expiresAt: _jwtProvider.GetRefreshTokenExpiry(),
+                deviceInfo: request.DeviceInfo,
+                ipAddress: request.IpAddress,
+                userAgent: null);
+
+            // ⚡ PHẢI add refresh token trước để có Id làm SessionId
+            account.AddRefreshToken(refreshTokenEntity);
+
+
+            // ==================== BƯỚC 7: Sinh access token ====================
+            var tokenUser = new TokenUser(
                 account.Id,
                 account.FullName,
-                account.Email ?? string.Empty,
-                Guid.NewGuid(),
-                Guid.NewGuid(),
-                roles,
-                permissions
-                );
+                account.PhoneNumber,
+                account.SecurityStamp,
+                refreshTokenEntity.Id,     // ← SessionId = RefreshToken.Id
+                roles);
 
-            // Bước 5: Gọi hàm đúc Token
             string accessToken = _jwtProvider.GenerateAccessToken(tokenUser);
-            string refreshToken = _jwtProvider.GenerateRefreshToken();
 
-            // Buoc 6: Băm RefreshToken để bảo mật và cập nhật vào Account
-            string hashedRefreshToken = _jwtProvider.HashToken(refreshToken);
-            account.UpdateRefreshToken(hashedRefreshToken, _jwtProvider.GetRefreshTokenExpiry());
+            // ==================== BƯỚC 8: Ghi vết đăng nhập ====================
+            account.RecordLogin(
+                DateTimeOffset.UtcNow,
+                request.IpAddress,
+                request.DeviceInfo);
 
-            // Buoc 7: Ghi vết đăng nhập
-            account.RecordLogin(DateTimeOffset.UtcNow);
-
-            // Buoc 8: Luu thay doi
+            // ==================== BƯỚC 9: Lưu ====================
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var userInfo = new AccountPublicInfoDto(
-            account.Id,
-            account.FullName,
-            account.Email,
-            account.PhoneNumber,
-            account.Status,
-            account.IsEmailVerified,
-            account.IsPhoneNumberVerified,
-            roles.ToList()
-        );
 
-            return new AuthResultDto(accessToken,refreshToken, userInfo);
+            // ==================== BƯỚC 10: Response ====================
+            var userInfo = new AccountPublicInfoDto(
+                account.Id,
+                account.FullName,
+                account.Email,
+                account.PhoneNumber,
+                account.Status,
+                account.IsEmailVerified,
+                account.IsPhoneNumberVerified,
+                roles);
+
+            return new AuthResultDto(
+                AccessToken: accessToken,
+                RefreshToken: refreshToken,
+                User: userInfo,
+                RequiresPasswordChange: account.MustChangePasswordOnNextLogin);
         }
     }
 }

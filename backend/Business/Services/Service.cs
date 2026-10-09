@@ -1,4 +1,5 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Common;
 using BaseClinic.Domain.Exceptions;
 using System.ComponentModel;
