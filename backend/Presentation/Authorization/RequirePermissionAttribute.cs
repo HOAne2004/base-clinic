@@ -1,39 +1,52 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Caching.Memory;
+using System.Security.Claims;
+using BaseClinic.Business.Interfaces.Repositories;
 
 namespace BaseClinic.Presentation.Authorization
 {
     /// <summary>
-    /// Attribute dùng để đánh dấu yêu cầu quyền cụ thể trên Controller hoặc Action
+    /// Attribute yêu cầu permission cụ thể trên Controller/Action.
+    /// 
+    /// CÁCH HOẠT ĐỘNG:
+    /// 1. Đọc roles từ JWT claims.
+    /// 2. Query permissions của các roles đó (cache 10 phút).
+    /// 3. Union permissions lại.
+    /// 4. Check xem có permission yêu cầu không.
     /// </summary>
     public class RequirePermissionAttribute : TypeFilterAttribute
     {
-        public RequirePermissionAttribute(string permission) : base(typeof(RequirePermissionFilter))
+        public RequirePermissionAttribute(string permission)
+            : base(typeof(RequirePermissionFilter))
         {
-            // Truyền mã quyền (ví dụ: "Appointment.Book") vào Filter
             Arguments = new object[] { permission };
         }
     }
 
-    /// <summary>
-    /// Filter thực thi logic kiểm tra JWT Token
-    /// </summary>
-    public class RequirePermissionFilter : IAuthorizationFilter
+    public class RequirePermissionFilter : IAsyncAuthorizationFilter
     {
         private readonly string _permission;
+        private readonly IMemoryCache _cache;
+        private readonly IRoleRepository _roleRepository;
 
-        public RequirePermissionFilter(string permission)
+        public RequirePermissionFilter(
+            string permission,
+            IMemoryCache cache,
+            IRoleRepository roleRepository)
         {
             _permission = permission;
+            _cache = cache;
+            _roleRepository = roleRepository;
         }
 
-        public void OnAuthorization(AuthorizationFilterContext context)
+        public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            // 1. Kiểm tra xem request có Token hợp lệ không
             var user = context.HttpContext.User;
+
+            // 1. Check authenticated
             if (user.Identity == null || !user.Identity.IsAuthenticated)
             {
-                // Trả về JSON thông báo 401 thay vì UnauthorizedResult rỗng
                 context.Result = new ObjectResult(new
                 {
                     Status = StatusCodes.Status401Unauthorized,
@@ -46,23 +59,51 @@ namespace BaseClinic.Presentation.Authorization
                 return;
             }
 
-            // 2. Quét trong danh sách Claims của Token xem có chứa mã quyền yêu cầu không.
-            bool hasPermission = user.Claims.Any(c =>
-                c.Type == "Permission" && c.Value == _permission);
+            // 2. Lấy roles từ JWT
+            var roles = user.FindAll(ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
 
-            // 3. Nếu không có quyền, chặn Request và trả về mã 403 Forbidden dạng JSON
-            if (!hasPermission)
+            if (roles.Count == 0)
             {
-                context.Result = new ObjectResult(new
-                {
-                    Status = StatusCodes.Status403Forbidden,
-                    Title = "Không có quyền truy cập.",
-                    Detail = $"Bạn cần quyền '{_permission}' để thực hiện thao tác này."
-                })
-                {
-                    StatusCode = StatusCodes.Status403Forbidden
-                };
+                context.Result = CreateForbiddenResult();
+                return;
             }
+
+            // 3. Union permissions của tất cả roles
+            var permissions = new HashSet<string>();
+            foreach (var roleCode in roles)
+            {
+                var cacheKey = $"role_permissions_{roleCode}";
+
+                if (!_cache.TryGetValue(cacheKey, out HashSet<string>? rolePerms))
+                {
+                    rolePerms = await _roleRepository.GetPermissionCodesByRoleCodeAsync(roleCode);
+                    _cache.Set(cacheKey, rolePerms, TimeSpan.FromMinutes(10));
+                }
+
+                if (rolePerms != null)
+                    permissions.UnionWith(rolePerms);
+            }
+
+            // 4. Check permission
+            if (!permissions.Contains(_permission))
+            {
+                context.Result = CreateForbiddenResult();
+            }
+        }
+
+        private ObjectResult CreateForbiddenResult()
+        {
+            return new ObjectResult(new
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "Không có quyền truy cập.",
+                Detail = $"Bạn cần quyền '{_permission}' để thực hiện thao tác này."
+            })
+            {
+                StatusCode = StatusCodes.Status403Forbidden
+            };
         }
     }
 }
