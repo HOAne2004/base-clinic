@@ -3,7 +3,7 @@ using BaseClinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Threading;
 
-namespace BaseClinic.Business.Interfaces
+namespace BaseClinic.Business.Interfaces.Repositories
 {
     public interface IPatientRepository
     {
