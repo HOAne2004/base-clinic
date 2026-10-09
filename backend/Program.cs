@@ -65,14 +65,13 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IEncounterRepository, EncounterRepository>();
 builder.Services.AddScoped<IOtpCodeRepository, OtpCodeRepository>();
-
 builder.Services.AddScoped<IPatientDelegationRepository, PatientDelegationRepository>();
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IQueueRepository, QueueRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
@@ -242,7 +241,7 @@ using (var scope = app.Services.CreateScope())
         await context.Database.MigrateAsync();
 
         // Gọi hàm quét và nạp quyền
-        await BaseClinic.DataAccess.Seeding.PermissionSeeder.SeedPermissionsAsync(context);
+        await BaseClinic.DataAccess.Seeding.DatabaseSeeder.SeedAllAsync(context);
     }
     catch (Exception ex)
     {
