@@ -9,3 +9,6 @@ Thumbs.db
 
 # Log
 *.log
+
+backend/appsettings.json
+backend/appsettings.Development.json

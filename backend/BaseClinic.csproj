@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Domain\ValueObjects\" />
+    <Folder Include="Business\Models\Common\" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-# Build results
+﻿# Build results
 bin/
 obj/
 
@@ -16,3 +16,7 @@ project.fragment.lock.json
 
 # Rider
 .idea/
+
+# Bỏ qua toàn bộ các file appsettings theo môi trường cá nhân
+**/appsettings.*.json
+!appsettings.json
