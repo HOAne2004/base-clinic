@@ -40,6 +40,12 @@ namespace BaseClinic.Domain.Entities
         public bool TwoFactorEnabled { get; private set; }
 
         /// <summary>
+        /// Security Stamp — đổi khi cần invalidate mọi token hiện có.
+        /// So sánh với claim trong JWT mỗi request để phát hiện token cũ.
+        /// </summary>
+        public Guid SecurityStamp { get; private set; }
+
+        /// <summary>
         /// Cờ bắt buộc đổi mật khẩu ở lần đăng nhập kế tiếp.
         /// Set = true khi Admin reset mật khẩu.
         /// </summary>
@@ -95,6 +101,7 @@ namespace BaseClinic.Domain.Entities
             IsEmailVerified = false;
             IsPhoneNumberVerified = false;
             MustChangePasswordOnNextLogin = false;
+            SecurityStamp = Guid.NewGuid();
         }
 
         // ==================== PROFILE METHODS ====================
@@ -176,9 +183,11 @@ namespace BaseClinic.Domain.Entities
         public void ChangePassword(string newPasswordHash)
         {
             SetPasswordHash(newPasswordHash);
+            SecurityStamp = Guid.NewGuid();
+            MustChangePasswordOnNextLogin = false;
             RevokeAllRefreshTokens("Đổi mật khẩu — yêu cầu đăng nhập lại.");
             UnlockAccount();
-            MustChangePasswordOnNextLogin = false;
+
         }
 
         /// <summary>
@@ -191,6 +200,7 @@ namespace BaseClinic.Domain.Entities
         public void AdminResetPassword(string tempPasswordHash)
         {
             SetPasswordHash(tempPasswordHash);
+            SecurityStamp = Guid.NewGuid();
             MustChangePasswordOnNextLogin = true;
             RevokeAllRefreshTokens("Admin reset mật khẩu.");
             UnlockAccount();
@@ -203,6 +213,7 @@ namespace BaseClinic.Domain.Entities
         public void CompleteForcedPasswordChange(string newPasswordHash)
         {
             SetPasswordHash(newPasswordHash);
+            SecurityStamp = Guid.NewGuid();
             MustChangePasswordOnNextLogin = false;
             RevokeAllRefreshTokens("Phiên bản đăng nhập hết hạn.");
         }
@@ -226,6 +237,8 @@ namespace BaseClinic.Domain.Entities
                 throw new DomainException("Lý do suspend không được để trống.");
 
             Status = AccountStatus.Suspended;
+            SecurityStamp = Guid.NewGuid();          
+            RevokeAllRefreshTokens("Tài khoản bị tạm ngưng.");
         }
 
         /// <summary>
@@ -240,6 +253,7 @@ namespace BaseClinic.Domain.Entities
             DeactivatedAt = DateTimeOffset.UtcNow;
             DeactivatedBy = deactivatedBy;
             DeactivationReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+            SecurityStamp = Guid.NewGuid();
             RevokeAllRefreshTokens("Tài khoản bị vô hiệu hóa.");
         }
 
@@ -307,6 +321,16 @@ namespace BaseClinic.Domain.Entities
 
         public void EnableTwoFactor() => TwoFactorEnabled = true;
         public void DisableTwoFactor() => TwoFactorEnabled = false;
+
+        /// <summary>
+        /// Đổi SecurityStamp + revoke toàn bộ refresh token.
+        /// Dùng khi user chọn "Đăng xuất khỏi mọi thiết bị".
+        /// </summary>
+        public void LogoutAllDevices()
+        {
+            SecurityStamp = Guid.NewGuid();
+            RevokeAllRefreshTokens("Đăng xuất khỏi mọi thiết bị.");
+        }
 
         // ==================== ROLE MANAGEMENT ====================
         /// <summary>Gán role. Idempotent — gán trùng không lỗi.</summary>

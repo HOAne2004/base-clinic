@@ -1,43 +1,53 @@
-﻿using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.DataAccess.Repositories
 {
-    public class RoleRepository : IRoleRepository
+    public class RoleRepository : Repository<Role>, IRoleRepository
     {
-        private readonly ClinicDbContext _context;
-        public RoleRepository (ClinicDbContext context)
+        public RoleRepository(ClinicDbContext context) : base(context)
         {
-            _context = context;
         }
 
-        public void Add(Role role)
+        public async Task<Role?> GetByIdWithPermissionsAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
         {
-            _context.Roles.Add(role);
-        }
-
-        public void Remove(Role role)
-        {
-            _context.Roles.Remove(role);
-        }
-        public async Task<Role?> GetByIdWithPermissionsAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            return await _context.Roles
+            return await _dbSet
                 .Include(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         }
 
-        public async Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+        public async Task<Role?> GetByNameAsync(
+            string name,
+            CancellationToken cancellationToken = default)
         {
-            return await _context.Roles
+            return await _dbSet
                 .FirstOrDefaultAsync(r => r.Name == name, cancellationToken);
         }
 
-        public async Task<Role?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<Role?> GetByCodeAsync(
+            string code,
+            CancellationToken cancellationToken = default)
         {
-            return await _context.Roles
-                .FirstOrDefaultAsync(r => r.Id ==id, cancellationToken);
+            return await _dbSet
+                .FirstOrDefaultAsync(r => r.Code == code, cancellationToken);
+        }
+
+        public async Task<HashSet<string>> GetPermissionCodesByRoleCodeAsync(
+            string roleCode,
+            CancellationToken cancellationToken = default)
+        {
+            var codes = await _dbSet
+                .Where(r => r.Code == roleCode && r.IsActive)
+                .SelectMany(r => r.RolePermissions)
+                .Select(rp => rp.Permission.Code)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return codes.ToHashSet();
         }
     }
 }

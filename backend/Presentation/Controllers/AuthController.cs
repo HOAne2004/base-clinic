@@ -1,11 +1,11 @@
 ﻿using BaseClinic.Business.Models.Auth;
 using BaseClinic.Business.Services.Auth.Commands;
-using BaseClinic.Presentation.Models.Requests;
 using BaseClinic.Presentation.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using BaseClinic.Presentation.Models.Requests.Auth;
 
 
 namespace BaseClinic.Presentation.Controllers
@@ -19,11 +19,19 @@ namespace BaseClinic.Presentation.Controllers
         {
             _mediator = mediator;
         }
+
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterCommand command)
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            await _mediator.Send(command);
-            return Ok(new { Message = "Đăng ký thành công." });
+            var result = await _mediator.Send(new RegisterCommand(
+                FullName: request.FullName,
+                PhoneNumber: request.PhoneNumber,
+                Password: request.Password));
+
+            return Ok(new ApiResponse<object>(
+                result,
+                "Đăng ký thành công. Vui lòng kiểm tra SMS để lấy mã OTP."));
         }
 
 

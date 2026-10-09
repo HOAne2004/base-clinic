@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BaseClinic.Presentation.Models.Requests
+namespace BaseClinic.Presentation.Models.Requests.Auth
 {
     public class LoginRequest
     {
