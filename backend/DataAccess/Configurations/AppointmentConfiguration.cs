@@ -9,36 +9,83 @@ namespace BaseClinic.DataAccess.Configurations
         public void Configure(EntityTypeBuilder<Appointment> builder)
         {
             builder.ToTable("Appointments");
-            builder.HasKey(x => x.Id);
 
-            builder.Property(x => x.Reason)
+            builder.HasKey(a => a.Id);
+
+            // ==================== PROPERTIES ====================
+            builder.Property(a => a.AppointmentCode)
                 .IsRequired()
+                .HasMaxLength(50);
+
+            builder.Property(a => a.AppointmentDate)
+                .IsRequired();
+
+            builder.Property(a => a.StartTime)
+                .IsRequired();
+
+            builder.Property(a => a.EndTime)
+                .IsRequired();
+
+            // Snapshot contact
+            builder.Property(a => a.ContactPhone)
+                .IsRequired()
+                .HasMaxLength(20)
+                .IsUnicode(false);
+
+            builder.Property(a => a.ContactName)
+                .HasMaxLength(100);
+
+            builder.Property(a => a.ContactRelationship)
+                .IsRequired(false);
+
+            builder.Property(a => a.Reason)
                 .HasMaxLength(500);
 
-            builder.Property(x => x.CancelReason)
+            builder.Property(a => a.Status)
+                .IsRequired();
+
+            builder.Property(a => a.CancelReason)
                 .HasMaxLength(500);
 
-            builder.Property(x => x.AppointmentDate).HasColumnType("date");
+            // ==================== INDEXES ====================
+            builder.HasIndex(a => a.AppointmentCode)
+                .IsUnique();
 
-            // EF Core 8+ hỗ trợ natively kiểu TimeOnly cho SQL Server / PostgreSQL
-            builder.Property(x => x.StartTime);
-            builder.Property(x => x.EndTime);
+            // Index cho query lịch hẹn theo ngày + bác sĩ
+            builder.HasIndex(a => new { a.AppointmentDate, a.DoctorId });
 
-            // Khóa ngoại
-            builder.HasOne<Patient>()
+            // Index cho query lịch hẹn theo patient
+            builder.HasIndex(a => a.PatientId);
+
+            // Index cho query lịch hẹn theo status
+            builder.HasIndex(a => a.Status);
+
+            // ==================== RELATIONSHIPS ====================
+
+            // 1. Appointment → Patient (N-1, bắt buộc)
+            builder.HasOne(a => a.Patient)
                 .WithMany()
-                .HasForeignKey(x => x.PatientId)
+                .HasForeignKey(a => a.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne<Department>()
+            // 2. Appointment → Doctor (bác sĩ thực sự khám, N-1, optional)
+            builder.HasOne(a => a.Doctor)
                 .WithMany()
-                .HasForeignKey(x => x.DepartmentId)
+                .HasForeignKey(a => a.DoctorId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            builder.HasOne<Doctor>()
+            // 3. Appointment → RequestedDoctor (bác sĩ user yêu cầu, N-1, optional)
+            // ⚡ CẦN chỉ định rõ navigation vì có 2 FK đến cùng bảng Doctors
+            builder.HasOne(a => a.RequestedDoctor)
                 .WithMany()
-                .HasForeignKey(x => x.RequestedDoctorId)
-                .OnDelete(DeleteBehavior.SetNull); // Bác sĩ nghỉ việc vẫn giữ được lịch sử lịch hẹn
+                .HasForeignKey(a => a.RequestedDoctorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // 4. Appointment → Department (N-1, optional)
+            builder.HasOne(a => a.Department)
+                .WithMany()
+                .HasForeignKey(a => a.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

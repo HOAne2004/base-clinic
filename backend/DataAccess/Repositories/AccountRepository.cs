@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +19,7 @@ namespace BaseClinic.DataAccess.Repositories
         public async Task<Account?> GetAccountByPhoneNumberAsync(string phoneNumber, CancellationToken cancellation)
         {
             return await _context.Accounts
+                .Include(a=> a.RefreshTokens)
                 .FirstOrDefaultAsync(a => a.PhoneNumber == phoneNumber, cancellation);
         }
 
@@ -29,7 +30,7 @@ namespace BaseClinic.DataAccess.Repositories
                 .SelectMany(a => a.AccountRoles)
                 .Select(ar => ar.Role)
                 .SelectMany(r => r.RolePermissions)
-                .Select(rp => rp.Permission.Name)
+                .Select(rp => rp.Permission.Code)
                 .Distinct()
                 .ToListAsync(cancellationToken);
         }
@@ -39,7 +40,7 @@ namespace BaseClinic.DataAccess.Repositories
             return await _context.Accounts
                 .Where(a => a.Id == accountId)
                 .SelectMany(a => a.AccountRoles)
-                .Select(ar => ar.Role.Name)
+                .Select(ar => ar.Role.Code)
                 .ToListAsync(cancellationToken);
         }
 
