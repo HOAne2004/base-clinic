@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -7,8 +7,9 @@ namespace BaseClinic.DataAccess.Repositories
 {
     public class Repository<T> : IRepository<T> where T : class, IEntity
     {
-        private readonly ClinicDbContext _context;
-        private readonly DbSet<T> _dbSet;
+        // protected de class con dung
+        protected readonly ClinicDbContext _context;
+        protected readonly DbSet<T> _dbSet;
 
         public Repository(ClinicDbContext context)
         {
@@ -16,8 +17,8 @@ namespace BaseClinic.DataAccess.Repositories
             _dbSet = context.Set<T>();
         }
 
-        public async Task<T?> GetByIdAsync(Guid? id)
-            => await _dbSet.FindAsync(id);
+        public async Task<T?> GetByIdAsync(Guid? id, CancellationToken cancellationToken = default)
+            => await _dbSet.FindAsync(new object?[] { id }, cancellationToken);
         // FindAsync ưu tiên tìm trong ChangeTracker trước, nếu không có mới query DB.
 
         public IQueryable<T> GetQueryable() // Đã có global lọc xóa mềm 
