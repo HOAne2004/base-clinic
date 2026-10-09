@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Services;
 using System.Security.Claims;
 
 namespace BaseClinic.DataAccess.Services
