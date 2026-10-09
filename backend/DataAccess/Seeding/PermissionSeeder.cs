@@ -5,48 +5,78 @@ using System.Reflection;
 
 namespace BaseClinic.DataAccess.Seeding
 {
+    /// <summary>
+    /// Seed Permission từ SystemPermissions constants.
+    /// Idempotent: chạy nhiều lần không tạo trùng.
+    /// </summary>
     public static class PermissionSeeder
     {
-        public static async Task SeedPermissionsAsync(ClinicDbContext context)
+        public static async Task SeedAsync(
+            ClinicDbContext context,
+            CancellationToken cancellationToken = default)
         {
-            var permissionsToAdd = new List<Permission>();
-
-            // 1. Quét các class con (Appointment, Encounter...)
+            // 1. Đọc tất cả nested class trong SystemPermissions
             var nestedTypes = typeof(SystemPermissions).GetNestedTypes();
+
+            // 2. Gom toàn bộ permission code + metadata
+            var permissionMetadatas = new List<(string Code, string Name, string Resource, string Action, string Description, int DisplayOrder)>();
 
             foreach (var type in nestedTypes)
             {
-                // Lấy tên class làm Resource (VD: "Appointment")
-                string resourceName = type.Name;
-
-                // Lấy các biến const bên trong class
-                var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-                                 .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string));
+                var fields = type.GetFields(
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                    .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string));
 
                 foreach (var field in fields)
                 {
-                    // Lấy mã quyền (VD: "Appointment.Book")
-                    string permissionName = (string)field.GetRawConstantValue()!;
+                    var code = (string)field.GetRawConstantValue()!;
+                    var attr = field.GetCustomAttribute<PermissionInfoAttribute>();
 
-                    // Lấy mô tả từ Attribute
-                    var attribute = field.GetCustomAttribute<PermissionInfoAttribute>();
-                    string description = attribute?.Description ?? string.Empty;
+                    if (attr == null)
+                        continue;
 
-                    // Kiểm tra xem Database đã có quyền này chưa
-                    bool exists = await context.Permissions.AnyAsync(p => p.Name == permissionName);
-
-                    if (!exists)
-                    {
-                        permissionsToAdd.Add(new Permission(permissionName, resourceName, description));
-                    }
+                    // Name lấy từ Description (hoặc có thể tách riêng nếu muốn)
+                    // Format: "Tạo lịch hẹn khám bệnh mới."
+                    permissionMetadatas.Add((
+                        Code: code,
+                        Name: attr.Description,
+                        Resource: attr.Resource,
+                        Action: attr.Action,
+                        Description: attr.Description,
+                        DisplayOrder: attr.DisplayOrder
+                    ));
                 }
             }
 
-            // 2. Lưu vào CSDL
-            if (permissionsToAdd.Any())
+            // 3. Lấy code đã có trong DB
+            var existingCodes = await context.Permissions
+                .Select(p => p.Code)
+                .ToListAsync(cancellationToken);
+            var existingSet = existingCodes.ToHashSet();
+
+            // 4. Tạo mới những permission chưa có
+            var toAdd = new List<Permission>();
+
+            foreach (var meta in permissionMetadatas)
             {
-                context.Permissions.AddRange(permissionsToAdd);
-                await context.SaveChangesAsync();
+                if (existingSet.Contains(meta.Code))
+                    continue;
+
+                var permission = new Permission(
+                    code: meta.Code,
+                    name: meta.Name,
+                    resource: meta.Resource,
+                    action: meta.Action,
+                    description: meta.Description,
+                    displayOrder: meta.DisplayOrder);
+
+                toAdd.Add(permission);
+            }
+
+            if (toAdd.Any())
+            {
+                context.Permissions.AddRange(toAdd);
+                await context.SaveChangesAsync(cancellationToken);
             }
         }
     }

@@ -42,5 +42,16 @@ namespace BaseClinic.DataAccess.Repositories
                 .Distinct()
                 .ToListAsync(cancellationToken);
         }
+        public async Task<bool> ExistsByPhoneAsync(string phoneNumber, CancellationToken ct = default)
+            => await _dbSet.AnyAsync(a => a.PhoneNumber == phoneNumber, ct);
+
+        public async Task<Account?> GetByIdWithRefreshTokensAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Include(a => a.RefreshTokens)
+                .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        }
     }
 }
