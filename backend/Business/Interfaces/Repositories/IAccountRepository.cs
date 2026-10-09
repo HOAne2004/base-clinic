@@ -20,5 +20,19 @@ namespace BaseClinic.Business.Interfaces.Repositories
         Task<List<string>> GetPermissionCodesByAccountIdAsync(
             Guid accountId,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Check SĐT đã tồn tại chưa. Dùng AnyAsync — không load entity.
+        /// Dùng cho Register.
+        /// </summary>
+        Task<bool> ExistsByPhoneAsync(string phoneNumber, CancellationToken ct = default);
+
+        /// <summary>
+        /// Lấy Account theo Id, kèm RefreshTokens.
+        /// Dùng cho VerifyOtp / RefreshToken — cần thiết để AddRefreshToken đúng.
+        /// </summary>
+        Task<Account?> GetByIdWithRefreshTokensAsync(
+            Guid id,
+            CancellationToken cancellationToken = default);
     }
 }
