@@ -1,37 +1,64 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Auth.Commands
 {
-    // Định nghĩa Command nhận vào AccountId
-    public record LogoutCommand(Guid AccountId) : IRequest;
+    /// <summary>
+    /// Command đăng xuất thiết bị hiện tại.
+    /// 
+    /// LUỒNG:
+    /// 1. Đọc SessionId từ JWT claim (= RefreshToken.Id).
+    /// 2. Tìm RefreshToken theo Id.
+    /// 3. Revoke token đó.
+    /// 4. Không đổi SecurityStamp — access token hiện tại vẫn dùng được
+    ///    đến khi hết hạn (tối đa 15 phút).
+    /// 
+    /// Lưu ý: SessionId được truyền từ Controller (đọc từ JWT).
+    /// </summary>
+    public record LogoutCommand(
+        Guid AccountId,
+        Guid SessionId
+    ) : IRequest<Unit>;
 
-    public class LogoutCommandHandler : IRequestHandler<LogoutCommand>
+    public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Unit>
     {
-        private readonly IAccountRepository _accountRepository;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public LogoutCommandHandler(IAccountRepository accountRepository, IUnitOfWork unitOfWork)
+        public LogoutCommandHandler(
+            IRefreshTokenRepository refreshTokenRepository,
+            IUnitOfWork unitOfWork)
         {
-            _accountRepository = accountRepository;
+            _refreshTokenRepository = refreshTokenRepository;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Handle(LogoutCommand request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(
+            LogoutCommand request,
+            CancellationToken cancellationToken)
         {
-            // 1. Lấy Account từ DB
-            var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
+            // ==================== BƯỚC 1: Tìm RefreshToken theo SessionId ====================
+            var token = await _refreshTokenRepository
+                .GetByIdAsync(request.SessionId, cancellationToken);
 
-            if (account != null)
-            {
-                // 2. Thu hồi Refresh Token
-                account.RevokeRefreshToken();
+            if (token == null)
+                throw new NotFoundException("Không tìm thấy phiên đăng nhập.");
 
-                // 3. Lưu vào DB
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-            }
+            // ==================== BƯỚC 2: Check token thuộc Account này ====================
+            if (token.AccountId != request.AccountId)
+                throw new DomainException("Phiên đăng nhập không thuộc tài khoản này.");
 
-            // Nếu dùng MediatR IRequest (không trả về kiểu dữ liệu), hàm sẽ kết thúc tại đây thay vì return Unit.Value
+            // ==================== BƯỚC 3: Revoke nếu còn active ====================
+            // Idempotent: nếu đã revoke rồi thì bỏ qua (user bấm logout 2 lần)
+            if (!token.IsActive)
+                throw new DomainException("Phiên đăng nhập đã kết thúc hoặc đã hết hạn.");
+            
+            token.Revoke("Người dùng đăng xuất.");
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return Unit.Value;
         }
     }
 }
