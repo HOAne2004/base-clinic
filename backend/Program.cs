@@ -1,4 +1,6 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Business.Interfaces.Services;
 using BaseClinic.Business.Services;
 using BaseClinic.Business.Services.Auth.Commands;
 using BaseClinic.Business.Settings;
@@ -216,6 +218,7 @@ app.UseCors("AllowNextJsApp");
 
 // 8.5. Authentication & Authorization
 app.UseAuthentication();
+app.UseMiddleware<SecurityStampValidationMiddleware>();
 app.UseAuthorization();
 
 // 8.6. Map Controllers (đồng thời thêm routing)

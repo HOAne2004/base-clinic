@@ -1,5 +1,5 @@
-﻿using BaseClinic.Business.Interfaces;
-using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Interfaces.Services;
+using BaseClinic.Business.Models.Auth;
 using BaseClinic.Business.Settings;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -19,6 +19,8 @@ namespace BaseClinic.DataAccess.Services
             _jwtOptions = jwtOptions.Value;
         }
 
+        // Client gửi token này trong header Authorization: Bearer <token>.
+        // Server verify signature → biết token hợp lệ → đọc claims mà không cần query DB.
         public string GenerateAccessToken(TokenUser user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
@@ -28,8 +30,9 @@ namespace BaseClinic.DataAccess.Services
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.MobilePhone, user.PhoneNumber),
             new Claim("SecurityStamp", user.SecurityStamp.ToString()),
             new Claim("SessionId", user.SessionId.ToString())
         };
@@ -38,12 +41,6 @@ namespace BaseClinic.DataAccess.Services
             foreach (var role in user.Roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            // CỐT LÕI CỦA RBAC ĐỘNG: Nhúng toàn bộ Permission vào Token
-            foreach (var permission in user.Permissions)
-            {
-                claims.Add(new Claim("Permission", permission));
             }
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -60,6 +57,8 @@ namespace BaseClinic.DataAccess.Services
             return tokenHandler.WriteToken(token);
         }
 
+        //  Refresh token dùng để lấy access token mới khi access token hết hạn,
+        //  KHÔNG cần login lại.
         public string GenerateRefreshToken()
         {
             var randomNumber = new byte[64];
@@ -71,6 +70,8 @@ namespace BaseClinic.DataAccess.Services
         public DateTime GetRefreshTokenExpiry() => DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays);
         public DateTime GetAccessTokenExpiry() => DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes);
 
+        // Băm refresh token trước khi lưu DB.Nếu DB bị lộ,
+        // hacker không dùng được token gốc.
         public string HashToken(string token)
         {
             using var sha256 = SHA256.Create();
