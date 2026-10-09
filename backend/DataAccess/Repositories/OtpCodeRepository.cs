@@ -43,5 +43,19 @@ namespace BaseClinic.DataAccess.Repositories
             foreach (var otp in pendingOtps)
                 otp.MarkAsUsed();
         }
+
+        public async Task<DateTimeOffset?> GetLatestCreatedTimeAsync(
+            Guid accountId,
+            OtpPurpose purpose,
+            CancellationToken cancellationToken = default)
+        {
+            var latest = await _dbSet
+                .Where(o => o.AccountId == accountId && o.Purpose == purpose)
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => (DateTimeOffset?)o.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return latest;
+        }
     }
 }

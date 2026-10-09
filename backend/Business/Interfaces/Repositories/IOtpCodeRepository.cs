@@ -21,5 +21,14 @@ namespace BaseClinic.Business.Interfaces.Repositories
             Guid accountId,
             OtpPurpose purpose,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Lấy thời điểm tạo OTP gần nhất (bất kể trạng thái valid/invalid).
+        /// Dùng để check cooldown gửi lại OTP.
+        /// </summary>
+        Task<DateTimeOffset?> GetLatestCreatedTimeAsync(
+            Guid accountId,
+            OtpPurpose purpose,
+            CancellationToken cancellationToken = default);
     }
 }

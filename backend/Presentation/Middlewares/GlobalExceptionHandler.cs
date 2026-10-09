@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using BaseClinic.Domain.Exceptions;
 using FluentValidation;
-using BaseClinic.Domain.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.Presentation.Middlewares
 {
@@ -65,6 +66,14 @@ namespace BaseClinic.Presentation.Middlewares
                 problemDetails.Title = "Không tìm thấy dữ liệu.";
                 problemDetails.Status = StatusCodes.Status404NotFound;
                 problemDetails.Detail = notFoundException.Message;
+            }
+            else if (exception is DbUpdateException dbEx
+                && dbEx.InnerException is SqlException sqlEx
+                && sqlEx.Number == 2601)  // 2601 = duplicate key
+            {
+                problemDetails.Status = 400;
+                problemDetails.Title = "Dữ liệu đã tồn tại.";
+                problemDetails.Detail = "Số điện thoại này đã được đăng ký.";
             }
             else
             {

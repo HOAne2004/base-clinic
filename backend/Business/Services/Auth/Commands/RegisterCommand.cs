@@ -2,6 +2,7 @@
 using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Business.Interfaces.Services;
 using BaseClinic.Business.Models.Auth;
+using BaseClinic.Domain.Constants;
 using BaseClinic.Domain.Entities;
 using BaseClinic.Domain.Enums;
 using BaseClinic.Domain.Exceptions;
@@ -70,9 +71,9 @@ namespace BaseClinic.Business.Services.Auth.Commands
         {
             // ==================== BƯỚC 1: Check SĐT chưa tồn tại ====================
             var existingAccount = await _accountRepository
-                .GetByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
+                .ExistsByPhoneAsync(request.PhoneNumber, cancellationToken);
 
-            if (existingAccount != null)
+            if (existingAccount)
                 throw new DomainException("Số điện thoại này đã được đăng ký.");
 
             // ==================== BƯỚC 2: Lấy Role PATIENT ====================
@@ -81,7 +82,7 @@ namespace BaseClinic.Business.Services.Auth.Commands
 
             if (patientRole == null)
                 throw new DomainException(
-                    $"Role '{DefaultRoleCode}' chưa được khởi tạo trong hệ thống. " +
+                    $"Role '{SystemRoles.Patient}' chưa được khởi tạo trong hệ thống. " +
                     $"Vui lòng liên hệ quản trị viên.");
 
             // ==================== BƯỚC 3: Hash password ====================
