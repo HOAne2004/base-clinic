@@ -1,4 +1,6 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Doctors.Commands
@@ -13,7 +15,7 @@ namespace BaseClinic.Business.Services.Doctors.Commands
         string? LicenseNumber,
         decimal? ConsultationFee,
         string? Description,
-        Guid? DepartmentId         
+        Guid? DepartmentId
     ) : IRequest<bool>;
 
     public class UpdateDoctorCommandHandler : IRequestHandler<UpdateDoctorCommand, bool>
@@ -21,20 +23,26 @@ namespace BaseClinic.Business.Services.Doctors.Commands
         private readonly IDoctorRepository _doctorRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateDoctorCommandHandler(IDoctorRepository doctorRepository, IUnitOfWork unitOfWork)
+        public UpdateDoctorCommandHandler(
+            IDoctorRepository doctorRepository,
+            IUnitOfWork unitOfWork)
         {
             _doctorRepository = doctorRepository;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<bool> Handle(UpdateDoctorCommand request, CancellationToken cancellation)
+        public async Task<bool> Handle(
+            UpdateDoctorCommand request,
+            CancellationToken cancellation)
         {
             var doctor = await _doctorRepository.GetByIdAsync(request.Id, cancellation);
             if (doctor == null)
             {
-                throw new InvalidOperationException("Bác sĩ không tồn tại.");
+                throw new NotFoundException("Bác sĩ không tồn tại.");
             }
 
+            // ==================== CẬP NHẬT PROFILE ====================
+            // Signature UpdateProfile của Doctor: (avatar, fullAddress, gender, dob, identityNumber, description)
             doctor.UpdateProfile(
                 request.Avatar,
                 request.FullAddress,
@@ -43,14 +51,28 @@ namespace BaseClinic.Business.Services.Doctors.Commands
                 request.IdentityNumber,
                 request.Description);
 
-            doctor.UpdateLicenseNumber(request.LicenseNumber);
+            // ==================== CẬP NHẬT LICENSE ====================
+            // Giữ nguyên issue/expiry/issuedBy cũ — chỉ update số license.
+            if (!string.IsNullOrWhiteSpace(request.LicenseNumber))
+            {
+                doctor.UpdateLicense(
+                    licenseNumber: request.LicenseNumber,
+                    issueDate: doctor.LicenseIssueDate,
+                    expiryDate: doctor.LicenseExpiryDate,
+                    issuedBy: doctor.LicenseIssuedBy);
+            }
 
-            doctor.UpdateConsultationFee(request.ConsultationFee ?? 0);
+            // ==================== CẬP NHẬT FEE ====================
+            // Code cũ: `request.ConsultationFee ?? 0` → ghi đè fee = 0 khi null (BUG).
+            if (request.ConsultationFee.HasValue)
+            {
+                doctor.UpdateConsultationFee(request.ConsultationFee.Value);
+            }
 
-            // Cập nhật khoa nếu có truyền lên
+            // ==================== CHUYỂN KHOA ====================
             if (request.DepartmentId.HasValue && request.DepartmentId.Value != Guid.Empty)
             {
-                doctor.UpdateDepartment(request.DepartmentId.Value);
+                doctor.TransferToDepartment(request.DepartmentId.Value);
             }
 
             await _unitOfWork.SaveChangesAsync(cancellation);

@@ -1,4 +1,6 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Business.Interfaces.Services;
 using BaseClinic.Business.Models;
 using BaseClinic.Domain.Entities;
 using BaseClinic.Domain.Enums;
@@ -59,8 +61,8 @@ namespace BaseClinic.Business.Services.Doctors.Commands
             try
             {
                 // BƯỚC 1: XÁC THỰC VÀ TẠO ACCOUNT
-                var existingAccount = await _accountRepository.GetAccountByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
-                if (existingAccount != null)
+                var existingAccount = await _accountRepository.ExistsByPhoneAsync(request.PhoneNumber, cancellationToken);
+                if (existingAccount)
                 {
                     throw new InvalidOperationException("Số điện thoại này đã được sử dụng cho một tài khoản khác.");
                 }
@@ -69,13 +71,13 @@ namespace BaseClinic.Business.Services.Doctors.Commands
 
                 var account = new Account(
                     fullName: request.FullName,
-                    email: request.Email,
-                    passwordHash: hashedPassword,
                     phoneNumber: request.PhoneNumber,
-                    status: AccountStatus.Active, // Tự động active khi tạo từ Admin
-                    isEmailVerified: false,
-                    isPhoneNumberVerified: true // Mặc định true vì SĐT là định danh chính
-                );
+                    passwordHash: hashedPassword,
+                    email: request.Email);
+
+                // Account mặc định Inactive → Admin tạo nên Active luôn
+                account.VerifyPhoneNumber();
+                account.Activate();
 
                 _accountRepository.Add(account);
 
@@ -83,7 +85,7 @@ namespace BaseClinic.Business.Services.Doctors.Commands
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 // BƯỚC 2: TÌM VÀ GÁN ROLE "DOCTOR" CHO ACCOUNT VỪA TẠO
-                var doctorRole = await _roleRepository.GetByNameAsync("Doctor", cancellationToken)
+                var doctorRole = await _roleRepository.GetByCodeAsync("Doctor", cancellationToken)
                     ?? throw new InvalidOperationException("Role hệ thống 'Doctor' chưa được khởi tạo trong Database.");
 
                 account.AssignRole(doctorRole.Id);
@@ -96,15 +98,23 @@ namespace BaseClinic.Business.Services.Doctors.Commands
                     accountId: account.Id,
                     departmentId: request.DepartmentId,
                     doctorCode: doctorCode,
+                    licenseNumber: request.LicenseNumber ?? "PENDING",  // Bắt buộc
+                    licenseIssueDate: null,
+                    licenseExpiryDate: null,
+                    licenseIssuedBy: null);
+
+                // Set các field profile qua UpdateProfile
+                doctor.UpdateProfile(
                     avatar: request.Avatar,
                     fullAddress: request.FullAddress,
                     gender: request.Gender,
                     dateOfBirth: request.DateOfBirth,
                     identityNumber: request.IdentityNumber,
-                    licenseNumber: request.LicenseNumber,
-                    consultationFee: request.ConsultationFee,
-                    description: request.Description
-                );
+                    description: request.Description);
+
+                // Set consultation fee
+                if (request.ConsultationFee.HasValue)
+                    doctor.UpdateConsultationFee(request.ConsultationFee.Value);
 
                 _doctorRepository.Add(doctor);
 

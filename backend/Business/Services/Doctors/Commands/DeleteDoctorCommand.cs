@@ -1,4 +1,5 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Doctors.Commands
@@ -36,11 +37,11 @@ namespace BaseClinic.Business.Services.Doctors.Commands
                 var account = await _accountRepository.GetByIdAsync(doctor.AccountId, cancellation);
                 if (account != null)
                 {
-                    account.Deactivate(); 
+                    account.Deactivate("ToDo: Reason", account.Id); 
                 }
 
                 // 2. Xóa hồ sơ Bác sĩ
-                _doctorRepository.Remove(doctor); 
+                _doctorRepository.Delete(doctor); 
 
                 await _unitOfWork.CommitTransactionAsync(cancellation);
                 return true;

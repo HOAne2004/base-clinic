@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Models.Doctor;
 using BaseClinic.Business.Services.Doctors.Queries;
 using BaseClinic.DataAccess;
 using MediatR;

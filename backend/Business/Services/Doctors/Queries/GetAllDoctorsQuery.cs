@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Models.Doctor;
 using BaseClinic.DataAccess;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +22,7 @@ namespace BaseClinic.Business.Services.Doctors.Queries
             var query = from d in _context.Doctors
                         join a in _context.Accounts on d.AccountId equals a.Id
                         join dep in _context.Departments on d.DepartmentId equals dep.Id
-                        orderby d.CreatedAt descending // Sắp xếp bác sĩ mới tạo lên đầu
+                        orderby d.CreatedDate descending // Sắp xếp bác sĩ mới tạo lên đầu
                         select new DoctorListDto(
                             d.Id,
                             d.AccountId,
