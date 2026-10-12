@@ -1,4 +1,4 @@
-import PatientHeroBanner from "../features/home/components/HeroBanner";
+import PatientHeroBanner from "../../features/home/components/HeroBanner";
 
 export default function Home() {
   return (

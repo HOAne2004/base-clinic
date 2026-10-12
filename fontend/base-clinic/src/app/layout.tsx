@@ -2,17 +2,13 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { AuthProvider } from "@/src/contexts/AuthContext"; // Import Provider
+import { AuthProvider } from "@/src/contexts/AuthContext";
 
-// Config FontAwesome để không tự động thêm CSS, vì chúng ta đã import styles.css thủ công
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 config.autoAddCss = false
 
 import { ToastContainer } from "react-toastify";
-
-import PatientHeader from "../components/layout/PatientHeader";
-import PatientFooter from "../components/layout/PatientFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,9 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <PatientHeader />
-          {children}
-          <PatientFooter />
+          {children}       
           <ToastContainer
             position="bottom-right"
             autoClose={3000}
