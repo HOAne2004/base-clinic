@@ -1,116 +1,159 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Business.Interfaces.Services;
 using BaseClinic.Domain.Entities;
 using BaseClinic.Domain.Enums;
+using BaseClinic.Domain.Exceptions;
+using BaseClinic.Domain.Extensions;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Patients.Commands
 {
+    /// <summary>
+    /// Thêm người thân (dependent) cho Patient primary hiện tại.
+    /// 
+    /// 2 LUỒNG:
+    /// 
+    /// LUỒNG A — Người thân ĐÃ CÓ Account:
+    ///     → Đây KHÔNG phải tạo dependent.
+    ///     → Đây là "request theo dõi" hồ sơ của B.
+    ///     → Tạo PatientDelegation status = Pending → chờ B approve.
+    /// 
+    /// LUỒNG B — Người thân CHƯA CÓ Account:
+    ///     → Tạo Patient mới (dependent).
+    ///     → PrimaryPatientId = Patient của A.
+    ///     → Auto-tạo PatientDelegation status = Accepted (Full access).
+    /// </summary>
     public record AddDependentCommand(
-        // ID của tài khoản đang đăng nhập (Người gửi yêu cầu)
         Guid AccountId,
-
-        // Thông tin người thân cần thêm
         string FullName,
         string PhoneNumber,
         DateTime? DateOfBirth,
         bool? Gender,
-
-        // Mối quan hệ (Ví dụ: Vợ, Chồng, Con cái...)
         PatientRelationshipType RelationshipType
-    ) : IRequest<string>; // Trả về chuỗi thông báo kết quả (Vì kết quả có thể là "Đã thêm" hoặc "Chờ xác nhận")
+    ) : IRequest<string>;
 
-    public class AddDependentCommandHandler : IRequestHandler<AddDependentCommand, string>
+    public class AddDependentCommandHandler
+        : IRequestHandler<AddDependentCommand, string>
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IAccountRepository _accountRepository;
-        private readonly IPatientRepository _patientRepository;
-        private readonly IPatientDelegationRepository _patientDelegationRepository;
+        private readonly IAccountRepository _accountRepo;
+        private readonly IPatientRepository _patientRepo;
+        private readonly IPatientDelegationRepository _delegationRepo;
         private readonly IPatientCodeGenerator _patientCodeGenerator;
 
         public AddDependentCommandHandler(
             IUnitOfWork unitOfWork,
-            IAccountRepository accountRepository,
-            IPatientRepository patientRepository,
-            IPatientDelegationRepository patientDelegationRepository,
+            IAccountRepository accountRepo,
+            IPatientRepository patientRepo,
+            IPatientDelegationRepository delegationRepo,
             IPatientCodeGenerator patientCodeGenerator)
         {
             _unitOfWork = unitOfWork;
-            _accountRepository = accountRepository;
-            _patientRepository = patientRepository;
-            _patientDelegationRepository = patientDelegationRepository;
+            _accountRepo = accountRepo;
+            _patientRepo = patientRepo;
+            _delegationRepo = delegationRepo;
             _patientCodeGenerator = patientCodeGenerator;
         }
 
-        public async Task<string> Handle(AddDependentCommand request, CancellationToken cancellationToken)
+        public async Task<string> Handle(
+            AddDependentCommand request,
+            CancellationToken cancellationToken)
         {
+            // ==================== BƯỚC 1: Lấy Patient primary của A ====================
+            var primaryPatient = await _patientRepo.GetPrimaryByAccountIdAsync(
+                request.AccountId, cancellationToken)
+                ?? throw new DomainException(
+                    "Tài khoản của bạn chưa có hồ sơ bệnh nhân gốc.");
+
+            // ==================== BƯỚC 2: Check SĐT người thân ====================
+            var existingAccount = await _accountRepo.GetByPhoneNumberAsync(
+                request.PhoneNumber, cancellationToken);
+
             await _unitOfWork.BeginTransactionAsync(cancellationToken);
             try
             {
-                var existingAccount = await _accountRepository.GetAccountByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
-
                 if (existingAccount != null)
                 {
-                    // LUỒNG A: NGƯỜI THÂN ĐÃ CÓ TÀI KHOẢN APP
+                    // ==================== LUỒNG A: Người thân ĐÃ CÓ Account ====================
+                    // → Đây là request theo dõi, không phải tạo dependent.
 
-                    // Lấy hồ sơ gốc của tài khoản đó
-                    var targetPatient = await _patientRepository.GetPrimaryPatientByAccountIdAsync(existingAccount.Id, cancellationToken)
-                        ?? throw new InvalidOperationException("Tài khoản người thân bị lỗi dữ liệu (không tìm thấy hồ sơ gốc).");
+                    // Lấy Patient primary của B
+                    var targetPatient = await _patientRepo.GetPrimaryByAccountIdAsync(
+                        existingAccount.Id, cancellationToken)
+                        ?? throw new DomainException(
+                            "Tài khoản người thân bị lỗi dữ liệu (không tìm thấy hồ sơ gốc).");
 
-                    // Kiểm tra xem đã gửi yêu cầu trước đó chưa để tránh duplicate
-                    bool isExists = await _patientDelegationRepository.CheckDelegationExistAsync(targetPatient.Id, request.AccountId, cancellationToken);
-                    if (isExists) throw new InvalidOperationException("Yêu cầu đã được gửi trước đó.");
+                    // Check đã có delegation chưa
+                    var existingDelegation = await _delegationRepo
+                        .GetActiveByTargetAndObserverAsync(
+                            targetPatient.Id, request.AccountId, cancellationToken);
 
-                    // Tạo giấy phép trạng thái PENDING (Chờ B xác nhận)
-                    var delegation = new PatientDelegation(
+                    if (existingDelegation != null)
+                        throw new DomainException("Yêu cầu đã được gửi trước đó.");
+
+                    // Tạo delegation Pending — chờ B approve
+                    var delegation = PatientDelegation.CreateRequest(
                         targetPatientId: targetPatient.Id,
-                        observerAccountId: request.AccountId,
-                        relationshipType: request.RelationshipType,
-                        status: DelegationStatus.Pending);
+                        requesterAccountId: request.AccountId,
+                        relationshipType: request.RelationshipType);
 
-                    _patientDelegationRepository.AddDelegation(delegation);
+                    _delegationRepo.Add(delegation);
+
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
-                    return $"Đã gửi yêu cầu liên kết đến số điện thoại {request.PhoneNumber}. Vui lòng chờ xác nhận.";
+                    return $"Đã gửi yêu cầu liên kết đến số điện thoại {request.PhoneNumber}. " +
+                           $"Vui lòng chờ xác nhận.";
                 }
                 else
                 {
-                    // LUỒNG B: NGƯỜI THÂN CHƯA CÓ TÀI KHOẢN APP (Tạo mới hoàn toàn)
-                    string patientCode = await _patientCodeGenerator.GenerateAsync(cancellationToken);
+                    // ==================== LUỒNG B: Người thân CHƯA CÓ Account ====================
+                    // → Tạo Patient dependent + auto delegation Accepted.
 
+                    string patientCode = await _patientCodeGenerator
+                        .GenerateAsync(cancellationToken);
+
+                    // Tạo Patient với PrimaryPatientId + RelationshipType
                     var newDependent = new Patient(
                         patientCode: patientCode,
-                        accountId: null, // Chưa có tài khoản
                         fullName: request.FullName,
-                        isPrimary: false);
+                        accountId: null,
+                        primaryPatientId: primaryPatient.Id,
+                        isPrimary: false,
+                        relationshipType: request.RelationshipType);
 
+                    // Cập nhật profile (signature mới)
                     newDependent.UpdateProfile(
                         fullName: request.FullName,
-                        avatar: null,
-                        fullAddress: null,
+                        avatarUrl: null,
+                        address: null,
                         identityNumber: null,
                         gender: request.Gender,
-                        dateOfBirth: request.DateOfBirth);
+                        dateOfBirth: request.DateOfBirth,
+                        healthInsuranceNumber: null);
 
-                    _patientRepository.Add(newDependent);
-                    // Lưu để EF Core sinh ra Id cho newDependent
+                    _patientRepo.Add(newDependent);
+
+                    // Save để có Id cho newDependent
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                    // Tạo giấy phép trạng thái ACCEPTED (Vì A tự tạo nên A có quyền luôn)
-                    var delegation = new PatientDelegation(
+                    // Auto-tạo delegation Accepted (Owner delegation)
+                    var delegation = PatientDelegation.CreateOwnerDelegation(
                         targetPatientId: newDependent.Id,
-                        observerAccountId: request.AccountId,
-                        relationshipType: request.RelationshipType,
-                        status: DelegationStatus.Accepted);
+                        ownerAccountId: request.AccountId,
+                        relationshipType: request.RelationshipType.Invert());
 
-                    _patientDelegationRepository.AddDelegation(delegation);
+                    _delegationRepo.Add(delegation);
+
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-                    return "Thêm hồ sơ người thân thành công. Bạn đã có thể đặt lịch cho hồ sơ này.";
+                    return "Thêm hồ sơ người thân thành công. " +
+                           "Bạn đã có thể đặt lịch cho hồ sơ này.";
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                throw new Exception("Có lỗi: ", ex);
+                throw;
             }
         }
     }

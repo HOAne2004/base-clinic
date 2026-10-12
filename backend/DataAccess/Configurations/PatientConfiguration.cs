@@ -64,6 +64,9 @@ namespace BaseClinic.DataAccess.Configurations
                 a.Ignore(x => x.FullText);
             });
 
+            // ==================== MERGE ====================
+            builder.Property(p => p.MergedIntoPatientId)
+                .IsRequired(false);
             // ==================== INDEXES ====================
             // Mã bệnh nhân unique
             builder.HasIndex(p => p.PatientCode)
@@ -83,6 +86,7 @@ namespace BaseClinic.DataAccess.Configurations
             builder.HasIndex(p => p.AccountId);
             builder.HasIndex(p => p.PrimaryPatientId);
             builder.HasIndex(p => p.FullName);
+            builder.HasIndex(p => p.MergedIntoPatientId);
 
             // ==================== RELATIONSHIPS ====================
 
@@ -111,6 +115,11 @@ namespace BaseClinic.DataAccess.Configurations
             builder.Metadata
                 .FindNavigation(nameof(Patient.Delegations))?
                 .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasOne<Patient>()
+                .WithMany()
+                .HasForeignKey(p => p.MergedIntoPatientId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

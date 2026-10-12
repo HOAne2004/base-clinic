@@ -26,9 +26,11 @@ namespace BaseClinic.DataAccess
         public DbSet<Encounter> Encounters => Set<Encounter>();
         public DbSet<LoginHistory> LoginHistory => Set<LoginHistory>();
         public DbSet<Medicine> Medicines => Set<Medicine>();
+        public DbSet<MergeRollbackRequest> MergeRollbackRequests => Set<MergeRollbackRequest>();
         public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
         public DbSet<Patient> Patients => Set<Patient>();
         public DbSet<PatientDelegation> PatientDelegations => Set<PatientDelegation>();
+        public DbSet<PatientMergeLog> PatientMergeLogs => Set<PatientMergeLog>();
         public DbSet<Permission> Permissions => Set<Permission>();
         public DbSet<Prescription> Prescriptions => Set<Prescription>();
         public DbSet<PrescriptionItem> PrescriptionItems => Set<PrescriptionItem>();

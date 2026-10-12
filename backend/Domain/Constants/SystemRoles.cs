@@ -22,7 +22,9 @@
             SystemPermissions.Doctor.Create,
             SystemPermissions.Doctor.Update,
             SystemPermissions.Doctor.Delete,
-            SystemPermissions.Patient.View
+            SystemPermissions.Patient.View,
+            SystemPermissions.Patient.RequestRollback,
+            SystemPermissions.Patient.ApproveRollback
         )]
         public const string Admin = "Admin";
 
@@ -48,7 +50,8 @@
             SystemPermissions.Patient.Create,
             SystemPermissions.Patient.Update,
             SystemPermissions.Department.View,
-            SystemPermissions.Doctor.View
+            SystemPermissions.Doctor.View,
+            SystemPermissions.Patient.RequestRollback
         )]
         public const string Receptionist = "Receptionist";
 
@@ -60,7 +63,8 @@
             SystemPermissions.Patient.View,
             SystemPermissions.Patient.ManageDelegation,
             SystemPermissions.Department.View,
-            SystemPermissions.Doctor.View
+            SystemPermissions.Doctor.View,
+            SystemPermissions.Patient.RequestRollback
         )]
         public const string Patient = "Patient";
     }

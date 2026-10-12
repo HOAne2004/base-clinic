@@ -1,4 +1,5 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Enums;
 using MediatR;
 
@@ -30,7 +31,7 @@ namespace BaseClinic.Business.Services.Patients.Commands
                 ?? throw new InvalidOperationException("Không tìm thấy liên kết này.");
 
             // Lấy hồ sơ gốc của người đang thao tác
-            var currentPatient = await _patientRepository.GetPrimaryPatientByAccountIdAsync(request.AccountId, cancellationToken);
+            var currentPatient = await _patientRepository.GetByIdAsync(request.AccountId, cancellationToken);
 
             // Kiểm tra quyền: Chỉ chủ hồ sơ (Target) HOẶC người theo dõi (Observer) mới được quyền xóa liên kết này
             bool isOwner = currentPatient != null && delegation.TargetPatientId == currentPatient.Id;
@@ -42,7 +43,7 @@ namespace BaseClinic.Business.Services.Patients.Commands
             }
 
             // Đổi trạng thái thành Revoked (hoặc bạn có thể gọi _delegationRepository.Remove(delegation) để xóa cứng)
-            delegation.ChangeStatus(DelegationStatus.Revoked);
+            delegation.Revoke("Thu hồi liên kết");
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

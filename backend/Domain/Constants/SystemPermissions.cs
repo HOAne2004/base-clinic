@@ -76,6 +76,18 @@
 
             [PermissionInfo("Quản lý ủy quyền theo dõi hồ sơ.", "Patient", "ManageDelegation", 4)]
             public const string ManageDelegation = "patient:manage_delegation";
+
+            [PermissionInfo("Gộp hồ sơ bệnh nhân trùng.", "Patient", "Merge", 5)]
+            public const string Merge = "patient:merge";
+
+            [PermissionInfo("Gửi yêu cầu hoàn tác gộp hồ sơ.", "Patient", "RequestRollback", 6)]
+            public const string RequestRollback = "patient:request_rollback";
+
+            [PermissionInfo("Duyệt yêu cầu hoàn tác gộp hồ sơ.", "Patient", "ApproveRollback", 7)]
+            public const string ApproveRollback = "patient:approve_rollback";
+
+            [PermissionInfo("Hoàn tác gộp hồ sơ trực tiếp.", "Patient", "RollbackMerge", 8)]
+            public const string RollbackMerge = "patient:rollback_merge";
         }
 
         public static class Permission

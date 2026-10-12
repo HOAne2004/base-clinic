@@ -1,4 +1,5 @@
 ﻿using BaseClinic.Domain.Common;
+using BaseClinic.Domain.Enums;
 using BaseClinic.Domain.Exceptions;
 using BaseClinic.Domain.ValueObjects;
 
@@ -66,6 +67,23 @@ namespace BaseClinic.Domain.Entities
         /// </summary>
         public bool IsPrimary { get; private set; }
 
+        /// <summary>
+        /// Quan hệ với Patient chính (chỉ có ý nghĩa khi là dependent).
+        /// Null nếu là primary.
+        /// </summary>
+        public PatientRelationshipType? RelationshipType { get; private set; }
+
+        // ==================== MERGE TRACKING ====================
+        /// <summary>
+        /// Nếu Patient này đã bị merge vào Patient khác → lưu Id của survivor.
+        /// Null = chưa bị merge.
+        /// 
+        /// Khi merge:
+        /// - Patient bị merge (merged): MergedIntoPatientId = survivor.Id, IsDeleted = true.
+        /// - Patient nhận (survivor): MergedIntoPatientId = null.
+        /// </summary>
+        public Guid? MergedIntoPatientId { get; private set; }
+
         // ==================== NAVIGATION ====================
         private readonly List<PatientDelegation> _delegations = new();
         public IReadOnlyCollection<PatientDelegation> Delegations => _delegations.AsReadOnly();
@@ -80,7 +98,8 @@ namespace BaseClinic.Domain.Entities
             string fullName,
             Guid? accountId = null,
             Guid? primaryPatientId = null,
-            bool isPrimary = false)
+            bool isPrimary = false,
+            PatientRelationshipType? relationshipType = null)
         {
             SetPatientCode(patientCode);
             SetFullName(fullName);
@@ -92,10 +111,17 @@ namespace BaseClinic.Domain.Entities
                 throw new DomainException(
                     "Patient phải là primary HOẶC có PrimaryPatientId HOẶC có AccountId.");
 
+            if (isPrimary && relationshipType != null)
+                throw new DomainException("Primary Patient không có RelationshipType.");
+
+            if (!isPrimary && relationshipType == null)
+                throw new DomainException("Dependent phải có RelationshipType.");
+
             AccountId = accountId;
             PrimaryPatientId = primaryPatientId;
             IsPrimary = isPrimary;
             Address = Address.Empty;
+            RelationshipType = relationshipType;
         }
 
         // ==================== PROFILE METHODS ====================
@@ -149,7 +175,15 @@ namespace BaseClinic.Domain.Entities
                 ? null
                 : healthInsuranceNumber.Trim();
         }
+        internal void SetAccountIdInternal(Guid? accountId)
+        {
+            AccountId = accountId;
+        }
 
+        internal void SetPrimaryPatientInternal(Guid primaryPatientId)
+        {
+            PrimaryPatientId = primaryPatientId;
+        }
         // ==================== CLAIM ACCOUNT ====================
         /// <summary>Claim hồ sơ — gán Account cho Patient.</summary>
         public void ClaimByAccount(Guid accountId)
@@ -190,6 +224,18 @@ namespace BaseClinic.Domain.Entities
                 throw new DomainException("Patient chính không có PrimaryPatientId để xóa.");
 
             PrimaryPatientId = null;
+            RelationshipType = null;
+        }
+
+        /// <summary>
+        /// Cập nhật quan hệ với primary patient.
+        /// </summary>
+        public void SetRelationshipType(PatientRelationshipType relationshipType)
+        {
+            if (IsPrimary)
+                throw new DomainException("Patient chính không có RelationshipType.");
+
+            RelationshipType = relationshipType;
         }
 
         // ==================== DELEGATION ====================
@@ -203,5 +249,47 @@ namespace BaseClinic.Domain.Entities
 
         internal void RemoveDelegation(PatientDelegation delegation)
             => _delegations.Remove(delegation);
+        // ==================== MERGE ====================
+        /// <summary>
+        /// Đánh dấu Patient này đã bị merge vào Patient khác.
+        /// </summary>
+        public void MarkAsMerged(Guid survivorPatientId)
+        {
+            if (survivorPatientId == Guid.Empty)
+                throw new DomainException("SurvivorPatientId không hợp lệ.");
+            if (survivorPatientId == Id)
+                throw new DomainException("Không thể merge Patient vào chính nó.");
+            if (MergedIntoPatientId.HasValue)
+                throw new DomainException("Patient này đã được merge trước đó.");
+
+            MergedIntoPatientId = survivorPatientId;
+        }
+
+        /// <summary>
+        /// Chuyển toàn bộ dependent của Patient này sang Patient khác.
+        /// Dùng khi merge.
+        /// </summary>
+        public void TransferDependentsTo(Patient survivor)
+        {
+            foreach (var dependent in _dependents.ToList())
+            {
+                dependent.PrimaryPatientId = survivor.Id;
+            }
+            _dependents.Clear();
+        }
+
+        /// <summary>
+        /// Khôi phục Patient đã bị merge.
+        /// Reset MergedIntoPatientId và IsDeleted.
+        /// </summary>
+        public void RestoreFromMerge()
+        {
+            if (!MergedIntoPatientId.HasValue)
+                throw new DomainException("Patient này chưa bị merge.");
+
+            MergedIntoPatientId = null;
+            // IsDeleted sẽ được reset qua cơ chế restore riêng
+            // (dùng _repository.Restore() ở tầng Service)
+        }
     }
 }

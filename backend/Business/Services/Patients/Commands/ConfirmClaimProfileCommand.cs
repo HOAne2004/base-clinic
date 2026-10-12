@@ -1,4 +1,5 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -44,7 +45,7 @@ namespace BaseClinic.Business.Services.Patients.Commands
             try
             {
                 // 2. Lấy hồ sơ bệnh nhân
-                var patient = await _patientRepository.GetByPatientCodeAsync(request.PatientCode, cancellationToken)
+                var patient = await _patientRepository.GetByCodeAsync(request.PatientCode, cancellationToken)
                     ?? throw new InvalidOperationException("Mã bệnh nhân không tồn tại.");
 
                 if (patient.AccountId != null)
@@ -53,7 +54,7 @@ namespace BaseClinic.Business.Services.Patients.Commands
                 }
 
                 // 3. Gắn AccountId của B vào hồ sơ gốc (Sử dụng hàm đã tạo trong Entity)
-                patient.ClaimProfile(request.AccountId);
+                patient.ClaimByAccount(request.AccountId);
 
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
 

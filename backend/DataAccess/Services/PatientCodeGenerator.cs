@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.DataAccess.Services

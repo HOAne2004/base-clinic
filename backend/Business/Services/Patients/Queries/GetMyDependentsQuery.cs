@@ -1,48 +1,54 @@
-﻿using BaseClinic.DataAccess;
-using BaseClinic.Domain.Enums;
+﻿using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Business.Models.Patient;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.Business.Services.Patients.Queries
 {
-    public record DependentDto(
-        Guid PatientId,
-        string PatientCode,
-        string FullName,
-        DateTime? DateOfBirth,
-        bool? Gender,
-        string RelationshipType
-    );
+    /// <summary>
+    /// Lấy danh sách dependent của Patient primary hiện tại.
+    /// </summary>
+    public record GetMyDependentsQuery(Guid AccountId)
+        : IRequest<List<DependentListItemDto>>;
 
-    public record GetMyDependentsQuery(Guid AccountId) : IRequest<List<DependentDto>>;
-
-    public class GetMyDependentsQueryHandler : IRequestHandler<GetMyDependentsQuery, List<DependentDto>>
+    public class GetMyDependentsQueryHandler
+        : IRequestHandler<GetMyDependentsQuery, List<DependentListItemDto>>
     {
-        private readonly ClinicDbContext _context;
+        private readonly IPatientRepository _patientRepo;
 
-        public GetMyDependentsQueryHandler(ClinicDbContext context)
+        public GetMyDependentsQueryHandler(IPatientRepository patientRepo)
         {
-            _context = context;
+            _patientRepo = patientRepo;
         }
 
-        public async Task<List<DependentDto>> Handle(GetMyDependentsQuery request, CancellationToken cancellationToken)
+        public async Task<List<DependentListItemDto>> Handle(
+            GetMyDependentsQuery request,
+            CancellationToken cancellationToken)
         {
-            // Join bảng PatientDelegation và bảng Patient
-            var query = from d in _context.PatientDelegations
-                        join p in _context.Patients on d.TargetPatientId equals p.Id
-                        where d.ObserverAccountId == request.AccountId
-                              && d.Status == DelegationStatus.Accepted // Chỉ lấy những hồ sơ ĐÃ ĐƯỢC CẤP QUYỀN
-                                                                       // In the LINQ select, ensure p.FullName is not null by providing a fallback value (e.g., empty string)
-                        select new DependentDto(
-                            p.Id,
-                            p.PatientCode,
-                            p.FullName ?? string.Empty,
-                            p.DateOfBirth,
-                            p.Gender,
-                            d.RelationshipType.ToString()
-                        );
+            // 1. Tìm Patient primary của Account
+            var primary = await _patientRepo.GetPrimaryByAccountIdAsync(
+                request.AccountId, cancellationToken);
 
-            return await query.ToListAsync(cancellationToken);
+            if (primary == null)
+                throw new DomainException(
+                    "Tài khoản này chưa có hồ sơ bệnh nhân.");
+
+            // 2. Lấy dependents
+            var dependents = await _patientRepo.GetDependentsAsync(
+                primary.Id, cancellationToken);
+
+            // 3. Map
+            return dependents.Select(d => new DependentListItemDto(
+                Id: d.Id,
+                PatientCode: d.PatientCode,
+                FullName: d.FullName,
+                Gender: d.Gender,
+                DateOfBirth: d.DateOfBirth,
+                IdentityNumber: d.IdentityNumber,
+                HealthInsuranceNumber: d.HealthInsuranceNumber,
+                Relationship: d.RelationshipType?.ToString(),
+                CreatedDate: d.CreatedDate
+            )).ToList();
         }
     }
 }
