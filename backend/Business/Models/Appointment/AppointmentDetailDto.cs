@@ -1,6 +1,6 @@
 ﻿using BaseClinic.Domain.Enums;
 
-namespace BaseClinic.Business.Models
+namespace BaseClinic.Business.Models.Appointment
 {
     public record AppointmentDetailDto(
         Guid Id,

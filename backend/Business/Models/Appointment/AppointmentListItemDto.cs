@@ -1,4 +1,4 @@
-﻿namespace BaseClinic.Business.Models
+﻿namespace BaseClinic.Business.Models.Appointment
 {
     public record AppointmentListItemDto(
             Guid Id,
