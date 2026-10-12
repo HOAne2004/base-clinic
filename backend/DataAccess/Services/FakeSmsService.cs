@@ -32,5 +32,21 @@ namespace BaseClinic.DataAccess.Services
 
             return Task.CompletedTask;
         }
+
+
+        public Task SendNotificationAsync(
+            string phoneNumber,
+            string message,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogWarning(
+                "════════ [FAKE SMS - NOTIFICATION] ════════\n" +
+                "  To     : {PhoneNumber}\n" +
+                "  Message: {Message}\n" +
+                "═══════════════════════════════════════════",
+                phoneNumber, message);
+
+            return Task.CompletedTask;
+        }
     }
 }

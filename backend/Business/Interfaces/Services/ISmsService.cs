@@ -14,5 +14,13 @@
             string otpCode,
             string purpose,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gửi SMS thông báo chung (không phải OTP).
+        /// </summary>
+        Task SendNotificationAsync(
+            string phoneNumber,
+            string message,
+            CancellationToken cancellationToken = default);
     }
 }
