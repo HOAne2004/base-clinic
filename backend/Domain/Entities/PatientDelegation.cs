@@ -96,6 +96,11 @@ namespace BaseClinic.Domain.Entities
         }
 
         // ==================== BUSINESS METHODS ====================
+
+        internal void SetTargetPatientIdInternal(Guid patientId)
+        {
+            TargetPatientId = patientId;
+        }
         public void Approve(Guid approverAccountId)
         {
             if (Status != DelegationStatus.Pending)
