@@ -1,32 +1,19 @@
-﻿
-using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.DataAccess.Repositories
 {
-    public class DepartmentRepository : IDepartmentRepository
+    public class DepartmentRepository : Repository<Department>, IDepartmentRepository
     {
-        private readonly ClinicDbContext _context;
-        public DepartmentRepository(ClinicDbContext context) {
-            _context = context;
-        }
+        public DepartmentRepository(ClinicDbContext context) : base(context) { }
 
-        public void Add(Department department)
+        public async Task<bool> IsCodeExistAsync(
+            string departmentCode,
+            CancellationToken cancellationToken = default)
         {
-            _context.Departments.Add(department);
-        }
-        public async Task<bool> IsCodeExistAsync(string departmentCode, CancellationToken cancellationToken = default)
-        {
-            return await _context.Departments
+            return await _dbSet
                 .AnyAsync(d => d.DepartmentCode == departmentCode, cancellationToken);
-            
-        }
-
-        public async Task<Department?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            return await _context.Departments
-                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
     }
 }

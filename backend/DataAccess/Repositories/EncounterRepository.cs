@@ -1,28 +1,20 @@
-﻿using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.DataAccess.Repositories
 {
-    public class EncounterRepository : IEncounterRepository
+    public class EncounterRepository : Repository<Encounter>, IEncounterRepository
     {
-        private readonly ClinicDbContext _context;
-        public EncounterRepository(ClinicDbContext context)
-        {
-            _context = context;
-        }
+        public EncounterRepository(ClinicDbContext context) : base(context) { }
 
-        public void Add (Encounter encounter)
-        {
-            _context.Encounters.Add(encounter);
-        }
-
-        public async Task<string> GenerateEncounterCodeAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GenerateEncounterCodeAsync(
+            CancellationToken cancellationToken = default)
         {
             var today = DateTime.UtcNow.Date;
             var prefix = $"ENC-{today:yyyyMMdd}";
 
-            var count = await _context.Encounters
+            var count = await _dbSet
                 .Where(e => e.EncounterCode.StartsWith(prefix))
                 .CountAsync(cancellationToken);
 
