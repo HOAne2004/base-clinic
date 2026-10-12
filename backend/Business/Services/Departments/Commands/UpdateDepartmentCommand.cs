@@ -1,10 +1,18 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.DataAccess.Repositories;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Departments.Commands
 {
-    public record UpdateDepartmentCommand (Guid Id, string Name, string? ImageUrl, string? Description) : IRequest<bool>;
+    public record UpdateDepartmentCommand (
+        Guid Id, string Name, 
+        string? ImageUrl, 
+        string? ShortDescription,
+        string? FullDescription,
+        string? Location,
+        string? PhoneNumber
+        ) : IRequest<bool>;
     
     public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCommand, bool>
     {
@@ -23,7 +31,7 @@ namespace BaseClinic.Business.Services.Departments.Commands
                 ?? throw new InvalidOperationException("Không tìm thấy thông tin khoa.");
 
             department.UpdateName(request.Name);
-            department.UpdateDetails(request.ImageUrl, request.Description);
+            department.UpdateDetails(request.ImageUrl, request.ShortDescription, request.FullDescription, request.Location, request.PhoneNumber);
 
             await _unitOfWork.SaveChangesAsync(cancellation);
             return true;

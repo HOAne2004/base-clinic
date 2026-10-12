@@ -26,7 +26,10 @@ namespace BaseClinic.DataAccess.Configurations
             builder.Property(x => x.ImageUrl)
                 .HasMaxLength(500);
 
-            builder.Property(x => x.Description)
+            builder.Property(x => x.ShortDescription)
+                .HasMaxLength(200);
+
+            builder.Property(x => x.FullDescription)
                 .HasMaxLength(1000);
 
             builder.Property(x => x.IsActive)

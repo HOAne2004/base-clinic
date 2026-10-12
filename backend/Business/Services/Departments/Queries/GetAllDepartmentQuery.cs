@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Models.Department;
 using BaseClinic.DataAccess;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +25,8 @@ namespace BaseClinic.Business.Services.Departments.Queries
                     d.Name,
                     d.DepartmentCode,
                     d.ImageUrl,
-                    d.Description,
+                    d.ShortDescription,
+                    d.FullDescription,
                     d.IsActive
                 ))
                 .ToListAsync(cancellationToken);

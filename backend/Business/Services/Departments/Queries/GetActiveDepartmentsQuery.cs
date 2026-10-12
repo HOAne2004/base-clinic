@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Models.Department;
 using BaseClinic.DataAccess;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

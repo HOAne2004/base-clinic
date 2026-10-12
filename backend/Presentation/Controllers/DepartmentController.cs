@@ -21,7 +21,7 @@ namespace BaseClinic.Presentation.Controllers
 
         [HttpPost]
         [RequirePermission(SystemPermissions.Department.Create)]
-        public async Task<IActionResult> Create([FromBody] CreateDeparementCommand command)
+        public async Task<IActionResult> Create([FromBody] CreateDepartmentCommand command)
         {
             var departmentId = await _mediator.Send(command);
 
