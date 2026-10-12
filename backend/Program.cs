@@ -8,6 +8,7 @@ using BaseClinic.DataAccess;
 using BaseClinic.DataAccess.Repositories;
 using BaseClinic.DataAccess.Services;
 using BaseClinic.DataAccess.UnitOfWork;
+using BaseClinic.Domain.Entities;
 using BaseClinic.Presentation.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -49,26 +50,34 @@ builder.Services.AddDbContext<ClinicDbContext>(options =>
 builder.Services.AddMediatR(cfg => 
     cfg.RegisterServicesFromAssembly(typeof(LoginCommand).Assembly));
 
+// Bind OcrOptions 
+builder.Services.Configure<OcrOptions>(
+    builder.Configuration.GetSection(OcrOptions.SectionName));
+
 // ============================================================
 // 4. ĐĂNG KÝ REPOSITORIES & UNIT OF WORK (DI)
 // ============================================================
 
 // 4.1. Các service
+builder.Services.AddScoped<IAppointmentCodeGenerator, AppointmentCodeGenerator>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IDoctorCodeGenerator, DoctorCodeGenerator>();
 builder.Services.AddScoped<IPatientCodeGenerator, PatientCodeGenerator>();
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
+builder.Services.AddScoped<IOcrService, TesseractOcrService>();
 builder.Services.AddScoped<ISmsService, FakeSmsService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // 4.2. Đăng ký Repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+builder.Services.AddScoped<IRepository<Appointment>, Repository<Appointment>>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IEncounterRepository, EncounterRepository>();
+builder.Services.AddScoped<IRepository<MergeRollbackRequest>, Repository<MergeRollbackRequest>>();
 builder.Services.AddScoped<IOtpCodeRepository, OtpCodeRepository>();
 builder.Services.AddScoped<IPatientDelegationRepository, PatientDelegationRepository>();
+builder.Services.AddScoped<IRepository<PatientMergeLog>, Repository<PatientMergeLog>>();
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IQueueRepository, QueueRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
