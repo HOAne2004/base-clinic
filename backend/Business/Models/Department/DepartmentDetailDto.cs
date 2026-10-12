@@ -1,11 +1,12 @@
-﻿namespace BaseClinic.Business.Models
+﻿namespace BaseClinic.Business.Models.Department
 {
     public record DepartmentDetailDto(
         Guid Id,
         string Name, 
         string DepartmentCode,
         string? ImageUrl, 
-        string? Description,
+        string? ShortDescription,
+        string? FullDescription,
         bool IsActive);
 
 }

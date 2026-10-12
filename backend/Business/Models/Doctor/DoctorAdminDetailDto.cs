@@ -1,4 +1,4 @@
-﻿namespace BaseClinic.Business.Models
+﻿namespace BaseClinic.Business.Models.Doctor
 {
     public record DoctorAdminDetailDto(
         Guid Id,

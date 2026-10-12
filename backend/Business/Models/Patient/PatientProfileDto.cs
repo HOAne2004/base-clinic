@@ -1,4 +1,4 @@
-﻿namespace BaseClinic.Business.Models
+﻿namespace BaseClinic.Business.Models.Patient
 {
     public record PatientProfileDto(
         Guid Id,
