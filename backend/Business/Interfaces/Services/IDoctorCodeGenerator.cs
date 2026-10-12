@@ -1,4 +1,4 @@
-﻿namespace BaseClinic.Business.Interfaces
+﻿namespace BaseClinic.Business.Interfaces.Services
 {
     public interface IDoctorCodeGenerator
     {

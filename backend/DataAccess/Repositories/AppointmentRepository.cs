@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Entities;
 using BaseClinic.Domain.Enums;
 using Microsoft.EntityFrameworkCore;

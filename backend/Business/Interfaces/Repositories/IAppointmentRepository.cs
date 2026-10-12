@@ -1,7 +1,7 @@
 ﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Entities;
 
-namespace BaseClinic.Business.Interfaces
+namespace BaseClinic.Business.Interfaces.Repositories
 {
     /// <summary>
     /// Repository cho Appointment.
