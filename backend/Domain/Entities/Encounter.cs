@@ -26,6 +26,10 @@ namespace BaseClinic.Domain.Entities
             CheckInAt = checkInAt;
             Status = EncounterStatus.Waiting;
         }
+        internal void SetPatientIdInternal(Guid patientId)
+        {
+            PatientId = patientId;
+        }
 
         public void StartConsultation()
         {
