@@ -1,34 +1,43 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Roles.Commands
 {
-    public record UpdateRoleCommand (Guid Id, string Name, string? Description) : IRequest<bool>;
+    public record UpdateRoleCommand(
+        Guid Id,
+        string Name,
+        string? Description
+    ) : IRequest<bool>;
 
-    public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, bool>
+    public class UpdateRoleCommandHandler
+        : IRequestHandler<UpdateRoleCommand, bool>
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IRoleRepository _roleRepository;
+        private readonly IRoleRepository _roleRepo;
 
-        public UpdateRoleCommandHandler(IUnitOfWork unitOfWork, IRoleRepository roleRepository)
+        public UpdateRoleCommandHandler(
+            IUnitOfWork unitOfWork,
+            IRoleRepository roleRepo)
         {
             _unitOfWork = unitOfWork;
-            _roleRepository = roleRepository;
+            _roleRepo = roleRepo;
         }
 
-        public async Task<bool> Handle(UpdateRoleCommand request, CancellationToken cancellation)
+        public async Task<bool> Handle(
+            UpdateRoleCommand request,
+            CancellationToken cancellation)
         {
-            var role = await _roleRepository.GetByIdAsync(request.Id);
-            if (role == null)
-            {
-                throw new InvalidOperationException("Không tìm thấy Role tương ứng");
-            }
+            var role = await _roleRepo.GetByIdAsync(request.Id)
+                ?? throw new NotFoundException("Không tìm thấy Role tương ứng.");
 
-            role.Update(request.Name, request.Description);
+            //    SetName/SetDescription đã có check IsSystemRole bên trong
+            role.SetName(request.Name);
+            role.SetDescription(request.Description);
+
             await _unitOfWork.SaveChangesAsync(cancellation);
-
             return true;
-
         }
     }
 }

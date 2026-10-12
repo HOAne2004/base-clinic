@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Interfaces;
+﻿using BaseClinic.Business.Interfaces.Repositories;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Roles.Queries

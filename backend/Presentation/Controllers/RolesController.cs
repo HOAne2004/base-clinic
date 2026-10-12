@@ -2,9 +2,11 @@
 using BaseClinic.Business.Services.Roles.Queries;
 using BaseClinic.Domain.Constants;
 using BaseClinic.Presentation.Authorization;
+using BaseClinic.Presentation.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BaseClinic.Presentation.Controllers
 {
@@ -20,8 +22,20 @@ namespace BaseClinic.Presentation.Controllers
             _mediator = mediator;
         }
 
+        /// <summary>
+        /// Đọc AccountId của Admin đang đăng nhập từ JWT.
+        /// Dùng làm GrantedBy khi gán permission.
+        /// </summary>
+        private Guid GetCurrentAccountId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(claim, out var accountId))
+                throw new UnauthorizedAccessException("Token không hợp lệ.");
+            return accountId;
+        }
+
         // ==========================================
-        // 1. QUẢN LÝ THỰC THỂ ROLE (CRUD)
+        // 1. QUẢN LÝ ROLE (CRUD)
         // ==========================================
 
         [HttpGet]
@@ -29,7 +43,7 @@ namespace BaseClinic.Presentation.Controllers
         public async Task<IActionResult> GetAllRoles()
         {
             var result = await _mediator.Send(new GetAllRolesQuery());
-            return Ok(result);
+            return Ok(new ApiResponse<object>(result));
         }
 
         [HttpPost]
@@ -37,62 +51,65 @@ namespace BaseClinic.Presentation.Controllers
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleCommand command)
         {
             var roleId = await _mediator.Send(command);
-            return Ok(new { Message = "Tạo mới chức danh thành công.", Data = roleId });
+            return Ok(new ApiResponse<Guid>(roleId, "Tạo mới chức danh thành công."));
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:guid}")]
         [RequirePermission(SystemPermissions.Role.Update)]
-        public async Task<IActionResult> UpdateRole(Guid id, [FromBody] UpdateRoleCommand command)
+        public async Task<IActionResult> UpdateRole(
+            Guid id, [FromBody] UpdateRoleCommand command)
         {
-            // Sử dụng "with" để copy record và gán đè Id từ URL vào Command
             var finalCommand = command with { Id = id };
             await _mediator.Send(finalCommand);
-            return Ok(new { Message = "Cập nhật chức danh thành công." });
+            return Ok(new ApiResponse<bool>(true, "Cập nhật chức danh thành công."));
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:guid}")]
         [RequirePermission(SystemPermissions.Role.Delete)]
         public async Task<IActionResult> DeleteRole(Guid id)
         {
             await _mediator.Send(new DeleteRoleCommand(id));
-            return Ok(new { Message = "Đã xóa chức danh thành công." });
+            return Ok(new ApiResponse<bool>(true, "Đã xóa chức danh thành công."));
         }
 
         // ==========================================
         // 2. QUẢN LÝ PHÂN QUYỀN CỦA ROLE
         // ==========================================
 
-        // Lấy danh sách toàn bộ quyền theo nhóm (Vẽ Checkbox)
         [HttpGet("permissions")]
         [RequirePermission(SystemPermissions.Permission.View)]
         public async Task<IActionResult> GetAllPermission()
         {
-            var query = new GetAllPermissionsQuery();
-            var result = await _mediator.Send(query);
-            return Ok(result);
+            var result = await _mediator.Send(new GetAllPermissionsQuery());
+            return Ok(new ApiResponse<object>(result));
         }
 
-        // Lấy các ID quyền hiện tại của 1 Role (Tích sẵn Checkbox)
-        [HttpGet("{id}/permissions")]
+        [HttpGet("{id:guid}/permissions")]
         [RequirePermission(SystemPermissions.RolePermission.View)]
         public async Task<IActionResult> GetPermissionsByRole(Guid id)
         {
-            // Sửa lỗi: Chuyển cú pháp khởi tạo ngoặc nhọn sang ngoặc tròn do đây là record
-            var query = new GetRolePermissionsQuery(id);
-            var result = await _mediator.Send(query);
-            return Ok(result);
+            var result = await _mediator.Send(new GetRolePermissionsQuery(id));
+            return Ok(new ApiResponse<object>(result));
         }
 
-        // PUT lưu danh sách quyền mới vào Role
-        [HttpPut("{id}/permissions")]
+        /// <summary>
+        /// Gán danh sách permission cho role.
+        /// GrantedByAccountId được lấy từ JWT → audit chính xác ai gán.
+        /// </summary>
+        [HttpPut("{id:guid}/permissions")]
         [RequirePermission(SystemPermissions.RolePermission.Assign)]
-        public async Task<IActionResult> AssignPermissions(Guid id, [FromBody] List<Guid> permissionIds)
+        public async Task<IActionResult> AssignPermissions(
+            Guid id, [FromBody] List<Guid> permissionIds)
         {
-            // Sửa lỗi: Chuyển cú pháp khởi tạo ngoặc nhọn sang ngoặc tròn do đây là record
-            var command = new AssignRolePermissionsCommand(id, permissionIds);
+            var currentAccountId = GetCurrentAccountId();
+
+            var command = new AssignRolePermissionsCommand(
+                RoleId: id,
+                PermissionIds: permissionIds,
+                GrantedByAccountId: currentAccountId);
 
             await _mediator.Send(command);
-            return Ok(new { Message = "Cập nhật phân quyền thành công." });
+            return Ok(new ApiResponse<bool>(true, "Cập nhật phân quyền thành công."));
         }
     }
 }

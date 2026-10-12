@@ -1,4 +1,5 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Roles.Commands
@@ -30,7 +31,7 @@ namespace BaseClinic.Business.Services.Roles.Commands
                 throw new InvalidOperationException("Không được phép xóa System Role.");
             }
 
-            _roleRepository.Remove(role);
+            _roleRepository.Delete(role);
 
             await _unitOfWork.SaveChangesAsync(cancellation);
 

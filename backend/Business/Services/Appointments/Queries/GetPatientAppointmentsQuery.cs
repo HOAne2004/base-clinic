@@ -1,4 +1,4 @@
-﻿using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Models.Appointment;
 using BaseClinic.DataAccess;
 using BaseClinic.Domain.Enums;
 using MediatR;

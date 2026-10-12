@@ -1,61 +1,52 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Domain.Constants;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
 
 namespace BaseClinic.Business.Services.Roles.Commands
 {
-    public record AssignRolePermissionsCommand (Guid RoleId, List<Guid> PermissionIds) : IRequest<bool>;
+    /// <summary>
+    /// Gán/thu hồi permission cho Role.
+    /// </summary>
+    public record AssignRolePermissionsCommand(
+        Guid RoleId,
+        List<Guid> PermissionIds,
+        Guid GrantedByAccountId    // ← AccountId của Admin đang thao tác
+    ) : IRequest<bool>;
 
-
-    public class AssignRolePermissionsCommandHandler : IRequestHandler<AssignRolePermissionsCommand, bool>
+    public class AssignRolePermissionsCommandHandler
+        : IRequestHandler<AssignRolePermissionsCommand, bool>
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IRoleRepository _roleRepository;
+        private readonly IRoleRepository _roleRepo;
 
         public AssignRolePermissionsCommandHandler(
             IUnitOfWork unitOfWork,
-            IRoleRepository roleRepository)
+            IRoleRepository roleRepo)
         {
             _unitOfWork = unitOfWork;
-            _roleRepository = roleRepository;
+            _roleRepo = roleRepo;
         }
 
-        public async Task<bool> Handle(AssignRolePermissionsCommand request, CancellationToken cancellation)
+        public async Task<bool> Handle(
+            AssignRolePermissionsCommand request,
+            CancellationToken cancellation)
         {
             await _unitOfWork.BeginTransactionAsync(cancellation);
-
             try
             {
-                // 1. Lấy Role kèm theo danh sách các quyền đang có (Eager Loading)
-                var role = await _roleRepository.GetByIdWithPermissionsAsync(request.RoleId, cancellation)
-                    ?? throw new InvalidOperationException("Không tìm thấy chức danh (Role) này.");
+                var role = await _roleRepo.GetByIdWithPermissionsAsync(
+                    request.RoleId, cancellation)
+                    ?? throw new NotFoundException("Không tìm thấy chức danh (Role).");
 
-                // 2. Chặn cập nhật quyền nếu đây là System Role (như Admin gốc) để bảo vệ hệ thống
-                //if (role.IsSystemRole)
-                //{
-                //    throw new InvalidOperationException("Không được phép thay đổi quyền của System Role.");
-                //}
-
-                // 3. Lấy ra danh sách các PermissionId hiện tại đang nằm trong Role
-                var currentPermissonIds = role.RolePermissions.Select(rp => rp.PermissionId).ToList();
-
-                // 4. Tìm các quyền bị Admin BỎ TÍCH trên giao diện (Có trong DB nhưng không có trong Request)
-                var permissionToRemove = currentPermissonIds.Except(request.PermissionIds).ToList();
-
-                // 5. Tìm các quyền được Admin TÍCH MỚI (Có trong Request nhưng chưa có trong DB)
-                var permissionToAdd = request.PermissionIds.Except(currentPermissonIds).ToList();
-
-                // 6. Cập nhật Entity thông qua các method Domain
-                foreach (var permissionId in permissionToRemove)
-                {
-                    role.RemovePermission(permissionId);
-                }
-                foreach (var permissionId in permissionToAdd)
-                {
-                    role.AssignPermission(permissionId);
-                }
+                // ⚡ Dùng SyncPermissions — đã có sẵn trong Role
+                //    Sync = add mới + remove cũ, tối ưu hơn vòng lặp thủ công
+                role.SyncPermissions(
+                    permissionIds: request.PermissionIds,
+                    grantedBy: request.GrantedByAccountId);
 
                 await _unitOfWork.CommitTransactionAsync(cancellation);
-
                 return true;
             }
             catch
