@@ -26,5 +26,13 @@ namespace BaseClinic.Business.Interfaces.Repositories
         Task<List<PatientDelegation>> GetActiveByObserverAccountIdAsync(
             Guid observerAccountId,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Lấy AccountId của owner delegation (Full access) cho Patient.
+        /// Dùng cho luồng claim profile — tìm người quản lý hồ sơ.
+        /// </summary>
+        Task<Guid?> GetCreatorAccountIdByTargetPatientIdAsync(
+            Guid targetPatientId,
+            CancellationToken cancellationToken = default);
     }
 }

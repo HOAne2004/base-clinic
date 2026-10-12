@@ -42,5 +42,20 @@ namespace BaseClinic.DataAccess.Repositories
                          && d.Status == DelegationStatus.Accepted)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<Guid?> GetCreatorAccountIdByTargetPatientIdAsync(
+            Guid targetPatientId,
+            CancellationToken cancellationToken = default)
+        {
+            // Owner delegation = Full access + Accepted + Observer đầu tiên (theo CreatedDate)
+            var ownerDelegation = await _dbSet
+                .Where(d => d.TargetPatientId == targetPatientId
+                         && d.AccessLevel == DelegationAccessLevel.Full
+                         && d.Status == DelegationStatus.Accepted)
+                .OrderBy(d => d.CreatedDate)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return ownerDelegation?.ObserverAccountId;
+        }
     }
 }
