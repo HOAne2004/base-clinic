@@ -1,7 +1,8 @@
-﻿using BaseClinic.Business.Interfaces;
-using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Interfaces.Services;
+using BaseClinic.Business.Models.Appointment;
 using BaseClinic.DataAccess;
 using BaseClinic.Domain.Enums;
+using BaseClinic.Domain.Exceptions;
 using BaseClinic.Presentation.Middlewares;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

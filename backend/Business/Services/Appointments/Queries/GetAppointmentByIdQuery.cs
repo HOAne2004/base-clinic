@@ -1,8 +1,8 @@
-﻿using BaseClinic.Business.Interfaces;
-using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Interfaces.Services;
+using BaseClinic.Business.Models.Appointment;
 using BaseClinic.DataAccess;
 using BaseClinic.Domain.Enums;
-using BaseClinic.Presentation.Middlewares;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -67,7 +67,7 @@ namespace BaseClinic.Business.Services.Appointments.Queries
             var isOwner = result.p.AccountId == accountId;
 
             // 2. Tài khoản hiện tại chính là người đã tạo lịch hẹn này
-            var isCreator = result.a.CreatedBy == accountId;
+            var isCreator = result.a.CreatedId == accountId;
 
             // 3. Tài khoản hiện tại được ủy quyền xem hồ sơ bệnh nhân này
             var isDelegated =
@@ -100,7 +100,7 @@ namespace BaseClinic.Business.Services.Appointments.Queries
                 result.a.AppointmentDate,
                 result.a.StartTime,
                 result.a.EndTime,
-                result.a.Reason,
+                result.a.Reason ?? string.Empty,
                 result.a.Status,
                 result.a.CancelReason
             );

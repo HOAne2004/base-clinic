@@ -1,5 +1,5 @@
-﻿using BaseClinic.Business.Interfaces;
-using BaseClinic.Business.Models;
+﻿using BaseClinic.Business.Interfaces.Services;
+using BaseClinic.Business.Models.Appointment;
 using BaseClinic.DataAccess;
 using BaseClinic.Domain.Enums;
 using MediatR;
@@ -68,7 +68,7 @@ namespace BaseClinic.Business.Services.Appointments.Queries
                 from acc in accGroup.DefaultIfEmpty()
 
                 where allowedPatientIds.Contains(a.PatientId)
-                   || a.CreatedBy == accountId
+                   || a.CreatedId == accountId
 
                 select new
                 {

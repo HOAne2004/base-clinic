@@ -1,164 +1,214 @@
 ﻿using BaseClinic.Business.Interfaces;
+using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Business.Interfaces.Services;
 using BaseClinic.Domain.Entities;
 using BaseClinic.Domain.Enums;
+using BaseClinic.Domain.Exceptions;
+using BaseClinic.Domain.Extensions;
 using MediatR;
-using System.Threading;
 
 namespace BaseClinic.Business.Services.Appointments.Commands
 {
-    public record BookAppointmentCommand
-    (
-         Guid AccountId,
-         Guid? DependentPatientId,
-         string? NewDependentFullName,
-         DateTime? NewDependentDob,
-         PatientRelationshipType? NewDependentRelationship,
-         Guid DepartmentId,
-         Guid? RequestedDoctorId,
-         DateTime AppointmentDate,
-         TimeOnly StartTime,
-         TimeOnly EndTime,
-         string Reason
+    /// <summary>
+    /// Đặt lịch hẹn.
+    /// 
+    /// 3 LUỒNG:
+    /// 1. Đặt cho chính mình (DependentPatientId = null, NewDependentFullName = null).
+    /// 2. Đặt cho dependent đã tồn tại (DependentPatientId != null).
+    /// 3. Đặt cho dependent mới (NewDependentFullName != null).
+    /// </summary>
+    public record BookAppointmentCommand(
+        Guid AccountId,
+        Guid? DependentPatientId,
+        string? NewDependentFullName,
+        DateTime? NewDependentDob,
+        PatientRelationshipType? NewDependentRelationship,
+        Guid DepartmentId,
+        Guid? RequestedDoctorId,
+        DateTime AppointmentDate,
+        TimeOnly StartTime,
+        TimeOnly EndTime,
+        string Reason
     ) : IRequest<Guid>;
 
-    public class BookAppointmentCommandHander : IRequestHandler<BookAppointmentCommand, Guid>
+    public class BookAppointmentCommandHandler
+        : IRequestHandler<BookAppointmentCommand, Guid>
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IPatientRepository _patientRepository;
-        private readonly IPatientDelegationRepository _patientDelegationRepository;
-        private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IAccountRepository _accountRepo;
+        private readonly IPatientRepository _patientRepo;
+        private readonly IPatientDelegationRepository _delegationRepo;
+        private readonly IAppointmentRepository _appointmentRepo;
         private readonly IPatientCodeGenerator _patientCodeGenerator;
+        private readonly IAppointmentCodeGenerator _appointmentCodeGenerator;
 
-        public BookAppointmentCommandHander(
+        public BookAppointmentCommandHandler(
             IUnitOfWork unitOfWork,
-            IPatientRepository patientRepository,
-            IPatientDelegationRepository patientDelegationRepository,
-            IAppointmentRepository appointmentRepository,
-            IPatientCodeGenerator patientCodeGenerator)
+            IAccountRepository accountRepo,
+            IPatientRepository patientRepo,
+            IPatientDelegationRepository delegationRepo,
+            IAppointmentRepository appointmentRepo,
+            IPatientCodeGenerator patientCodeGenerator,
+            IAppointmentCodeGenerator appointmentCodeGenerator)
         {
             _unitOfWork = unitOfWork;
-            _patientRepository = patientRepository;
-            _patientDelegationRepository = patientDelegationRepository;
-            _appointmentRepository = appointmentRepository;
+            _accountRepo = accountRepo;
+            _patientRepo = patientRepo;
+            _delegationRepo = delegationRepo;
+            _appointmentRepo = appointmentRepo;
             _patientCodeGenerator = patientCodeGenerator;
+            _appointmentCodeGenerator = appointmentCodeGenerator;
         }
 
-        public async Task<Guid> Handle(BookAppointmentCommand request, CancellationToken cancellation)
+        public async Task<Guid> Handle(
+            BookAppointmentCommand request,
+            CancellationToken cancellationToken)
         {
-            await _unitOfWork.BeginTransactionAsync(cancellation);
+            // ==================== BƯỚC 1: Lấy thông tin người đặt ====================
+            var account = await _accountRepo.GetByIdAsync(
+                request.AccountId, cancellationToken)
+                ?? throw new DomainException("Không tìm thấy tài khoản.");
+
+            var primaryPatient = await _patientRepo.GetPrimaryByAccountIdAsync(
+                request.AccountId, cancellationToken)
+                ?? throw new DomainException(
+                    "Tài khoản chưa được liên kết với hồ sơ bệnh nhân gốc.");
+
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
             try
             {
-                // Bước 1: Xác định hồ sơ chính (Dùng để đặt cho bản thân)
-                var primaryPatient = await _patientRepository.GetPrimaryPatientByAccountIdAsync(request.AccountId, cancellation)
-                    ?? throw new InvalidOperationException("Tài khoản chưa được liên kết với hồ sơ bệnh nhân gốc.");
-
                 Guid targetPatientId = primaryPatient.Id;
 
-                // Bước 2: Tự suy luận luồng đặt lịch
+                // ==================== BƯỚC 2: Xác định Patient target ====================
                 if (request.DependentPatientId.HasValue)
                 {
-                    // Luồng A: Đặt cho hồ sơ phụ ĐÃ TỒN TẠI VÀ ĐƯỢC CẤP QUYỀN
-                    // SỬA ĐỔI: Truyền request.AccountId thay vì primaryPatient.Id
-                    var dependent = await _patientRepository.GetDependentPatientByIdAsync(request.DependentPatientId.Value, request.AccountId, cancellation)
-                        ?? throw new InvalidOperationException("Hồ sơ phụ không tồn tại hoặc bạn chưa được cấp quyền xem hồ sơ này.");
+                    // LUỒNG 2: Đặt cho dependent đã tồn tại
+                    var dependent = await _patientRepo.GetByIdAsync(
+                        request.DependentPatientId.Value, cancellationToken)
+                        ?? throw new DomainException("Không tìm thấy hồ sơ người phụ thuộc.");
+
+                    // Check A có quyền với dependent này không
+                    // - Hoặc dependent.PrimaryPatientId == primaryPatient.Id
+                    // - Hoặc có delegation Accepted
+                    bool hasAccess = dependent.PrimaryPatientId == primaryPatient.Id;
+
+                    if (!hasAccess)
+                    {
+                        var delegation = await _delegationRepo
+                            .GetActiveByTargetAndObserverAsync(
+                                dependent.Id, request.AccountId, cancellationToken);
+                        hasAccess = delegation != null;
+                    }
+
+                    if (!hasAccess)
+                        throw new ForbiddenException(
+                            "Bạn không có quyền đặt lịch cho hồ sơ này.");
 
                     targetPatientId = dependent.Id;
                 }
-                else if (!string.IsNullOrWhiteSpace(request.NewDependentFullName) && request.NewDependentRelationship.HasValue)
+                else if (!string.IsNullOrWhiteSpace(request.NewDependentFullName)
+                         && request.NewDependentRelationship.HasValue)
                 {
-                    // Luồng B: Khởi tạo hồ sơ phụ MỚI
-                    string patientCode = await _patientCodeGenerator.GenerateAsync(cancellation);
+                    // LUỒNG 3: Tạo dependent mới
+                    string patientCode = await _patientCodeGenerator
+                        .GenerateAsync(cancellationToken);
 
                     var newDependent = new Patient(
                         patientCode: patientCode,
-                        accountId: null,
                         fullName: request.NewDependentFullName,
-                        isPrimary: false);
+                        accountId: null,
+                        primaryPatientId: primaryPatient.Id,
+                        isPrimary: false,
+                        relationshipType: request.NewDependentRelationship.Value);
 
                     newDependent.UpdateProfile(
                         fullName: request.NewDependentFullName,
-                        avatar: null,
-                        fullAddress: null,
+                        avatarUrl: null,
+                        address: null,
                         identityNumber: null,
                         gender: null,
-                        dateOfBirth: request.NewDependentDob);
+                        dateOfBirth: request.NewDependentDob,
+                        healthInsuranceNumber: null);
 
-                    _patientRepository.Add(newDependent);
+                    _patientRepo.Add(newDependent);
 
-                    // Bắt buộc SaveChangesAsync để lấy ID của newDependent
-                    await _unitOfWork.SaveChangesAsync(cancellation);
+                    // Save để có Id
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                    // Tạo giấy phép truy cập (PatientDelegation) cho người tạo
-                    var delegation = new PatientDelegation(
+                    // Auto-delegation
+                    var delegation = PatientDelegation.CreateOwnerDelegation(
                         targetPatientId: newDependent.Id,
-                        observerAccountId: request.AccountId,
-                        relationshipType: request.NewDependentRelationship.Value,
-                        status: DelegationStatus.Accepted);
+                        ownerAccountId: request.AccountId,
+                        relationshipType: request.NewDependentRelationship.Value.Invert());
 
-                    _patientDelegationRepository.AddDelegation(delegation);
-                    await _unitOfWork.SaveChangesAsync(cancellation);
+                    _delegationRepo.Add(delegation);
 
                     targetPatientId = newDependent.Id;
                 }
 
-                // Bước 3: Re-validate booking conditions
-                // 3.1. Kiểm tra thời gian không được nằm trong quá khứ
-                // (Giả định AppointmentDate lưu ngày, StartTime lưu giờ)
-                var appointmentDateTime = request.AppointmentDate.Date.Add(request.StartTime.ToTimeSpan());
-                if (appointmentDateTime < DateTime.Now)
-                {
-                    throw new InvalidOperationException("Không thể đặt lịch cho thời điểm trong quá khứ.");
-                }
+                // ==================== BƯỚC 3: Validate thời gian ====================
+                var appointmentDateTime = request.AppointmentDate.Date
+                    .Add(request.StartTime.ToTimeSpan());
 
-                // 3.2. Bệnh nhân không được phép có lịch khám khác trùng giờ (tránh double-booking)
-                bool isPatientBusy = await _appointmentRepository.HasOverlappingAppointmentAsync(
+                if (appointmentDateTime < DateTime.Now)
+                    throw new DomainException("Không thể đặt lịch cho thời điểm trong quá khứ.");
+
+                // ==================== BƯỚC 4: Check trùng lịch ====================
+                bool isPatientBusy = await _appointmentRepo.HasOverlappingAppointmentAsync(
                     patientId: targetPatientId,
                     date: request.AppointmentDate,
                     startTime: request.StartTime,
                     endTime: request.EndTime,
-                    cancellationToken: cancellation);
+                    cancellationToken: cancellationToken);
 
                 if (isPatientBusy)
-                {
-                    throw new InvalidOperationException("Hồ sơ bệnh nhân này đã có một lịch hẹn khác trong cùng khoảng thời gian.");
-                }
+                    throw new DomainException(
+                        "Hồ sơ bệnh nhân này đã có lịch hẹn trong cùng khoảng thời gian.");
 
-                // 3.3. Nếu có chỉ định đích danh bác sĩ, kiểm tra xem bác sĩ có rảnh không
                 if (request.RequestedDoctorId.HasValue)
                 {
-                    bool isDoctorBusy = await _appointmentRepository.HasOverlappingDoctorAppointmentAsync(
-                        doctorId: request.RequestedDoctorId.Value,
-                        date: request.AppointmentDate,
-                        startTime: request.StartTime,
-                        endTime: request.EndTime,
-                        cancellationToken: cancellation);
+                    bool isDoctorBusy = await _appointmentRepo
+                        .HasOverlappingDoctorAppointmentAsync(
+                            doctorId: request.RequestedDoctorId.Value,
+                            date: request.AppointmentDate,
+                            startTime: request.StartTime,
+                            endTime: request.EndTime,
+                            cancellationToken: cancellationToken);
 
                     if (isDoctorBusy)
-                    {
-                        throw new InvalidOperationException("Bác sĩ được yêu cầu đã kín lịch vào thời gian này. Vui lòng chọn khung giờ hoặc bác sĩ khác.");
-                    }
+                        throw new DomainException(
+                            "Bác sĩ đã kín lịch vào thời gian này.");
                 }
 
-                // Bước 4: Tạo Appointment
+                // ==================== BƯỚC 5: Sinh AppointmentCode ====================
+                var appointmentCode = await _appointmentCodeGenerator
+                    .GenerateAsync(cancellationToken);
+
+                // ==================== BƯỚC 6: Tạo Appointment ====================
                 var appointment = new Appointment(
+                    appointmentCode: appointmentCode,
                     patientId: targetPatientId,
-                    departmentId: request.DepartmentId,
+                    contactPhone: account.PhoneNumber,           // ← Snapshot từ Account
                     appointmentDate: request.AppointmentDate,
                     startTime: request.StartTime,
                     endTime: request.EndTime,
+                    departmentId: request.DepartmentId,
+                    requestedDoctorId: request.RequestedDoctorId,
+                    contactName: null,                           // Fallback = Patient.FullName
+                    contactRelationship: null,
                     reason: request.Reason,
-                    requestedDoctorId: request.RequestedDoctorId);
+                    isFromReceptionist: false);                  // User tự đặt → Pending
 
-                _appointmentRepository.Add(appointment);
+                _appointmentRepo.Add(appointment);
 
-                // Bước 5: Chốt giao dịch
-                await _unitOfWork.CommitTransactionAsync(cancellation);
+                // ==================== BƯỚC 7: Commit ====================
+                await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
                 return appointment.Id;
             }
             catch
             {
-                await _unitOfWork.RollbackTransactionAsync(cancellation);
+                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                 throw;
             }
         }

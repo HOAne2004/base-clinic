@@ -1,11 +1,39 @@
 ﻿namespace BaseClinic.Domain.Enums
 {
+    /// <summary>
+    /// Trạng thái của lịch hẹn.
+    /// 
+    /// LUỒNG CHUYỂN TRẠNG THÁI:
+    /// 
+    ///     Pending ──confirm──> Confirmed
+    ///        │                    │
+    ///        │                    ├──check-in──> CheckedIn ──complete──> Completed
+    ///        │                    │
+    ///        │                    ├──no-show──> NoShow
+    ///        │                    │
+    ///        └──cancel────────────┴──cancel──> Cancelled
+    /// </summary>
     public enum AppointmentStatus
     {
-        Confirmed = 1, // Lịch hẹn đã được xác nhận bởi bệnh nhân và bác sĩ
-        CheckedIn = 2, // Bệnh nhân đã đến và check-in tại phòng khám
-        Completed = 3, // Lịch hẹn đã hoàn tất, bác sĩ đã khám xong cho bệnh nhân
-        Cancelled = 4, // Lịch hẹn đã bị hủy bởi bệnh nhân hoặc bác sĩ
-        NoShow = 5 // Bệnh nhân không đến đúng giờ và không thông báo hủy lịch hẹn
+        /// <summary>
+        /// Chờ xác nhận — user vừa đặt online, chờ lễ tân/bác sĩ xác nhận.
+        /// Nếu đặt trực tiếp tại quầy hoặc qua receptionist → có thể bỏ qua Pending.
+        /// </summary>
+        Pending = 0,
+
+        /// <summary>Đã xác nhận — sẵn sàng cho check-in.</summary>
+        Confirmed = 1,
+
+        /// <summary>Bệnh nhân đã đến và check-in tại phòng khám.</summary>
+        CheckedIn = 2,
+
+        /// <summary>Đã hoàn tất — bác sĩ đã khám xong.</summary>
+        Completed = 3,
+
+        /// <summary>Đã hủy — bởi bệnh nhân hoặc bác sĩ.</summary>
+        Cancelled = 4,
+
+        /// <summary>Bệnh nhân không đến và không thông báo.</summary>
+        NoShow = 5
     }
 }
