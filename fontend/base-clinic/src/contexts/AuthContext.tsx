@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { TokenService, UserProfile } from "@/src/lib/auth/token";
 
-// 1. Định nghĩa khuôn mẫu cho "Tổng đài" Auth
+// 1. Định nghĩa khuôn mẫu cho Auth
 interface AuthContextType {
     user: UserProfile | null;
     isAuthenticated: boolean;
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 }
 
-// 3. Tạo một Custom Hook để các component khác xài cho lẹ
+// 3. Tạo một Custom Hook để các component khác xài 
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {
