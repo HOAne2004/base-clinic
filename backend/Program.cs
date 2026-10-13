@@ -246,12 +246,13 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ClinicDbContext>();
+        var passwordHasher = services.GetRequiredService<IPasswordHasher>();
 
         // Đảm bảo database đã được tạo và update mới nhất
         await context.Database.MigrateAsync();
 
         // Gọi hàm quét và nạp quyền
-        await BaseClinic.DataAccess.Seeding.DatabaseSeeder.SeedAllAsync(context);
+        await BaseClinic.DataAccess.Seeding.DatabaseSeeder.SeedAllAsync(context, passwordHasher);
     }
     catch (Exception ex)
     {

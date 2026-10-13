@@ -1,4 +1,6 @@
-﻿namespace BaseClinic.DataAccess.Seeding
+﻿using BaseClinic.Business.Interfaces.Services;
+
+namespace BaseClinic.DataAccess.Seeding
 {
     /// <summary>
     /// Chạy toàn bộ seeder theo thứ tự dependency.
@@ -12,9 +14,11 @@
     {
         public static async Task SeedAllAsync(
             ClinicDbContext context,
+            IPasswordHasher passwordHasher,
             CancellationToken cancellationToken = default)
         {
             await DepartmentSeeder.SeedAsync(context, cancellationToken);
+            await DoctorSeeder.SeedAsync(context, passwordHasher,cancellationToken);
             await PermissionSeeder.SeedAsync(context, cancellationToken);
             await RoleSeeder.SeedAsync(context, cancellationToken);
             await RolePermissionSeeder.SeedAsync(context, cancellationToken);

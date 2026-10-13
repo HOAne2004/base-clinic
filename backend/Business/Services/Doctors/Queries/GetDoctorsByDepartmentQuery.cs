@@ -1,6 +1,5 @@
 ﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Business.Mappers;
-using BaseClinic.Business.Models.Department;
 using BaseClinic.Business.Models.Doctor;
 using BaseClinic.Domain.Exceptions;
 using MediatR;
@@ -10,12 +9,12 @@ namespace BaseClinic.Business.Services.Doctors.Queries
 {
     /// <summary>
     /// Danh sách bác sĩ theo khoa — dùng cho Public (Guest/Patient).
-    /// URL: GET /api/departments/{id}/doctors
+    /// URL: GET /api/departments/{slug}/doctors
     /// 
     /// Chỉ trả về doctors active.
     /// Được gọi từ DepartmentController.
     /// </summary>
-    public record GetDoctorsByDepartmentQuery(Guid DepartmentId)
+    public record GetDoctorsByDepartmentQuery(string DepartmentSlug)
         : IRequest<List<DoctorPublicListDto>>;
 
     public class GetDoctorsByDepartmentQueryHandler
@@ -39,15 +38,15 @@ namespace BaseClinic.Business.Services.Doctors.Queries
             GetDoctorsByDepartmentQuery request,
             CancellationToken cancellationToken)
         {
-            // 1. Validate department tồn tại
-            var department = await _departmentRepo.GetByIdAsync(
-                request.DepartmentId, cancellationToken)
+            // 1. Tìm department theo slug
+            var department = await _departmentRepo.GetQueryable()
+                .FirstOrDefaultAsync(d => d.Slug == request.DepartmentSlug, cancellationToken)
                 ?? throw new NotFoundException(
-                    $"Không tìm thấy khoa với Id {request.DepartmentId}.");
+                    $"Không tìm thấy khoa với slug '{request.DepartmentSlug}'.");
 
             // 2. Lấy doctors active
             var doctors = await _doctorRepo.GetQueryable()
-                .Where(d => d.DepartmentId == request.DepartmentId && d.IsActive)
+                .Where(d => d.DepartmentId == department.Id && d.IsActive)
                 .OrderBy(d => d.SortOrder)
                 .ThenBy(d => d.DoctorCode)
                 .ToListAsync(cancellationToken);

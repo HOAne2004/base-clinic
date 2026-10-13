@@ -132,13 +132,14 @@ namespace BaseClinic.Presentation.Controllers
 
         /// <summary>
         /// Danh sách bác sĩ đang hoạt động của một khoa — dùng cho public.
-        /// URL: GET /api/departments/{id:guid}/doctors
+        /// URL: GET /api/departments/{slug}/doctors
+        /// VD: GET /api/departments/khoa-nhi/doctors
         /// </summary>
-        [HttpGet("{id:guid}/doctors")]
+        [HttpGet("{slug}/doctors")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetDoctorsByDepartment(Guid id)
+        public async Task<IActionResult> GetDoctorsByDepartment(string slug)
         {
-            var result = await _mediator.Send(new GetDoctorsByDepartmentQuery(id));
+            var result = await _mediator.Send(new GetDoctorsByDepartmentQuery(slug));
             return Ok(new ApiResponse<List<DoctorPublicListDto>>(result));
         }
     }
