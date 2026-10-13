@@ -31,7 +31,7 @@ namespace BaseClinic.Domain.Entities
         public string? Description { get; private set; }
 
         // === Pháp lý ===
-        public string LicenseNumber { get; private set; } = null!;   // BẮT BUỘC
+        public string? LicenseNumber { get; private set; } = null!;   // BẮT BUỘC
         public DateTime? LicenseIssueDate { get; private set; }
         public DateTime? LicenseExpiryDate { get; private set; }
         public string? LicenseIssuedBy { get; private set; }

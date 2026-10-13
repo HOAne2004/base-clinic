@@ -62,11 +62,11 @@ namespace BaseClinic.DataAccess.Configurations
 
             // ==================== LICENSE ====================
             builder.Property(x => x.LicenseNumber)
-                .IsRequired()
                 .HasMaxLength(50);
 
             builder.HasIndex(x => x.LicenseNumber)
-                .IsUnique();
+                .IsUnique()
+                .HasFilter("[LicenseNumber] IS NOT NULL");
 
             builder.Property(x => x.LicenseIssueDate)
                 .IsRequired(false);
