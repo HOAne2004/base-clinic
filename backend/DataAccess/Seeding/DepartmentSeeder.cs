@@ -19,6 +19,7 @@ namespace BaseClinic.DataAccess.Seeding
             string Code,
             string Name,
             string? ImageUrl,
+            string? Slug,
             string? ShortDescription,
             string? FullDescription,
             string? Location,
@@ -35,6 +36,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "CAP_CUU",
                 Name: "Khoa Cấp cứu",
+                Slug: "khoa-cap-cuu",
                 ImageUrl: null,
                 ShortDescription: "Tiếp nhận và xử lý các ca cấp cứu 24/24.",
                 FullDescription: "Khoa Cấp cứu hoạt động 24/24, tiếp nhận mọi trường hợp " +
@@ -52,6 +54,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "NOI_TONG_HOP",
                 Name: "Khoa Nội tổng hợp",
+                Slug:"khoa-noi-tong-hop",
                 ImageUrl: null,
                 ShortDescription: "Khám và điều trị các bệnh nội khoa.",
                 FullDescription: "Khoa Nội tổng hợp chuyên khám, chẩn đoán và điều trị " +
@@ -68,6 +71,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "NGOAI_TONG_HOP",
                 Name: "Khoa Ngoại tổng hợp",
+                Slug:"khoa-ngoai-tong-hop",
                 ImageUrl: null,
                 ShortDescription: "Khám và phẫu thuật các bệnh ngoại khoa.",
                 FullDescription: "Khoa Ngoại tổng hợp thực hiện các ca phẫu thuật " +
@@ -84,6 +88,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "NHI",
                 Name: "Khoa Nhi",
+                Slug:"khoa-nhi",
                 ImageUrl: null,
                 ShortDescription: "Khám và điều trị bệnh cho trẻ em.",
                 FullDescription: "Khoa Nhi chuyên khám, điều trị và chăm sóc sức khỏe " +
@@ -100,6 +105,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "SAN",
                 Name: "Khoa Sản",
+                Slug:"khoa-san",
                 ImageUrl: null,
                 ShortDescription: "Khám thai và chăm sóc sức khỏe sinh sản.",
                 FullDescription: "Khoa Sản cung cấp dịch vụ khám thai định kỳ, " +
@@ -116,6 +122,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "MAT",
                 Name: "Khoa Mắt",
+                Slug:"khoa-mat",
                 ImageUrl: null,
                 ShortDescription: "Khám và điều trị các bệnh về mắt.",
                 FullDescription: "Khoa Mắt thực hiện khám, đo thị lực, chẩn đoán và " +
@@ -132,6 +139,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "TAI_MUI_HONG",
                 Name: "Khoa Tai Mũi Họng",
+                Slug:"khoa-tai-mui-hong",
                 ImageUrl: null,
                 ShortDescription: "Khám và điều trị bệnh tai mũi họng.",
                 FullDescription: "Khoa Tai Mũi Họng chuyên khám, nội soi và điều trị " +
@@ -147,6 +155,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "RANG_HAM_MAT",
                 Name: "Khoa Răng Hàm Mặt",
+                Slug:"khoa-rang-ham-mat",
                 ImageUrl: null,
                 ShortDescription: "Khám và điều trị các bệnh về răng miệng.",
                 FullDescription: "Khoa Răng Hàm Mặt cung cấp dịch vụ khám, điều trị " +
@@ -163,6 +172,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "DA_LIEU",
                 Name: "Khoa Da liễu",
+                Slug:"khoa-da-lieu",
                 ImageUrl: null,
                 ShortDescription: "Khám và điều trị các bệnh về da.",
                 FullDescription: "Khoa Da liễu chuyên khám và điều trị các bệnh lý " +
@@ -179,6 +189,7 @@ namespace BaseClinic.DataAccess.Seeding
             new(
                 Code: "PHONG_PHAU_THUAT",
                 Name: "Phòng Phẫu thuật",
+                Slug:"phong-phau-thuat",
                 ImageUrl: null,
                 ShortDescription: "Phòng phẫu thuật chuyên biệt.",
                 FullDescription: "Phòng Phẫu thuật đang trong quá trình nâng cấp " +
@@ -213,6 +224,7 @@ namespace BaseClinic.DataAccess.Seeding
                 var department = new Department(
                     name: seed.Name,
                     departmentCode: seed.Code,
+                    slug: seed.Slug,
                     imageUrl: seed.ImageUrl,
                     shortDescription: seed.ShortDescription,
                     fullDescription: seed.FullDescription,

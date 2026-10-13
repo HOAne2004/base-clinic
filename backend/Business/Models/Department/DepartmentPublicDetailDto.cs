@@ -6,6 +6,7 @@
     /// </summary>
     public record DepartmentPublicDetailDto(
         Guid Id,
+        string Slug,
         string Name,
         string DepartmentCode,
         string? ImageUrl,

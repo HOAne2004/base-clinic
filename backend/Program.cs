@@ -65,6 +65,7 @@ builder.Services.AddScoped<IDoctorCodeGenerator, DoctorCodeGenerator>();
 builder.Services.AddScoped<IPatientCodeGenerator, PatientCodeGenerator>();
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
 builder.Services.AddScoped<IOcrService, TesseractOcrService>();
+builder.Services.AddScoped<ISlugGenerator, SlugGenerator>();
 builder.Services.AddScoped<ISmsService, FakeSmsService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 

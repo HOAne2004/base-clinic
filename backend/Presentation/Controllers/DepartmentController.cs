@@ -32,15 +32,6 @@ namespace BaseClinic.Presentation.Controllers
             return Ok(new ApiResponse<object>(result));
         }
 
-        /// <summary>Chi tiết khoa công khai (guest xem).</summary>
-        [HttpGet("{id:guid}/public")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetPublicDetail(Guid id)
-        {
-            var result = await _mediator.Send(new GetDepartmentPublicDetailQuery(id));
-            return Ok(new ApiResponse<DepartmentPublicDetailDto>(result));
-        }
-
         /// <summary>Dropdown khoa đang hoạt động.</summary>
         [HttpGet("active")]
         [AllowAnonymous]
@@ -48,6 +39,18 @@ namespace BaseClinic.Presentation.Controllers
         {
             var result = await _mediator.Send(new GetActiveDepartmentsQuery());
             return Ok(new ApiResponse<List<DepartmentLookupDto>>(result));
+        }
+
+        /// <summary>
+        /// Chi tiết khoa công khai (guest) — dùng SLUG.
+        /// VD: GET /api/departments/khoa-noi-tong-hop
+        /// </summary>
+        [HttpGet("{slug}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPublicDetail(string slug)
+        {
+            var result = await _mediator.Send(new GetDepartmentPublicDetailQuery(slug));
+            return Ok(new ApiResponse<DepartmentPublicDetailDto>(result));
         }
 
         // ==================== ADMIN ENDPOINTS ====================

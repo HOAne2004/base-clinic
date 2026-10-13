@@ -82,6 +82,7 @@ namespace BaseClinic.Business.Mappers
 
             return new DepartmentPublicDetailDto(
                 Id: dept.Id,
+                Slug: dept.Slug,
                 Name: dept.Name,
                 DepartmentCode: dept.DepartmentCode,
                 ImageUrl: dept.ImageUrl,
@@ -118,6 +119,7 @@ namespace BaseClinic.Business.Mappers
         {
             return new DepartmentPublicListDto(
                 Id: dept.Id,
+                Slug: dept.Slug,
                 Name: dept.Name,
                 ImageUrl: dept.ImageUrl,
                 ShortDescription: dept.ShortDescription,

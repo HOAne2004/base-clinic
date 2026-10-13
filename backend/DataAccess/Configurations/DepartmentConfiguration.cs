@@ -23,6 +23,14 @@ namespace BaseClinic.DataAccess.Configurations
 
             builder.HasIndex(x => x.DepartmentCode).IsUnique();
 
+            builder.Property(x => x.Slug)
+                .IsRequired()
+                .HasMaxLength(Department.MaxSlugLength)
+                .IsUnicode(false);   // Slug chỉ chứa a-z, 0-9, '-' → ASCII
+
+            builder.HasIndex(x => x.Slug)
+                .IsUnique();
+
             builder.Property(x => x.ImageUrl)
                 .HasMaxLength(500);
 

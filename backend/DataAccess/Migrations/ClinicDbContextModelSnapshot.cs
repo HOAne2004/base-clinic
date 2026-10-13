@@ -409,6 +409,12 @@ namespace BaseClinic.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
+
                     b.Property<int>("SortOrder")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -429,6 +435,9 @@ namespace BaseClinic.Migrations
                         .IsUnique();
 
                     b.HasIndex("IsActive");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
 
                     b.HasIndex("SortOrder");
 
@@ -534,6 +543,12 @@ namespace BaseClinic.Migrations
                     b.Property<int?>("MaxPatientsPerDay")
                         .HasColumnType("int");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(200)");
+
                     b.Property<int>("SortOrder")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -577,6 +592,9 @@ namespace BaseClinic.Migrations
                     b.HasIndex("LicenseNumber")
                         .IsUnique()
                         .HasFilter("[LicenseNumber] IS NOT NULL");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
 
                     b.HasIndex("SortOrder");
 

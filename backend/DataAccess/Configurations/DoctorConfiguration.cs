@@ -22,6 +22,14 @@ namespace BaseClinic.DataAccess.Configurations
 
             builder.HasIndex(x => x.DoctorCode).IsUnique();
 
+            builder.Property(x => x.Slug)
+              .IsRequired()
+              .HasMaxLength(Doctor.MaxSlugLength)
+              .IsUnicode(false);
+
+            builder.HasIndex(x => x.Slug)
+                .IsUnique();
+
             // ==================== PROFESSIONAL INFO ====================
             builder.Property(x => x.Title)
                 .HasMaxLength(50);

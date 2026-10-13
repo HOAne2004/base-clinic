@@ -10,7 +10,7 @@ namespace BaseClinic.Business.Services.Departments.Queries
     /// <summary>
     /// Lấy chi tiết khoa công khai (chỉ doctors active).
     /// </summary>
-    public record GetDepartmentPublicDetailQuery(Guid Id)
+    public record GetDepartmentPublicDetailQuery(string Slug)
         : IRequest<DepartmentPublicDetailDto>;
 
     public class GetDepartmentPublicDetailQueryHandler
@@ -36,11 +36,8 @@ namespace BaseClinic.Business.Services.Departments.Queries
         {
             // 1. Lấy department — chỉ trả về nếu active
             var dept = await _departmentRepo.GetQueryable()
-                .FirstOrDefaultAsync(d => d.Id == request.Id, cancellationToken)
-                ?? throw new NotFoundException($"Không tìm thấy khoa với Id {request.Id}.");
-
-            if (!dept.IsActive)
-                throw new NotFoundException($"Khoa này hiện không hoạt động.");
+                .FirstOrDefaultAsync(d => d.Slug == request.Slug, cancellationToken)
+                ?? throw new NotFoundException($"Không tìm thấy khoa {request.Slug}.");
 
             // 2. Chỉ lấy doctors active
             var doctors = await _doctorRepo.GetQueryable()
