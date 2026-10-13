@@ -1,4 +1,6 @@
 ﻿using BaseClinic.Domain.Common;
+using BaseClinic.Domain.Exceptions;
+using BaseClinic.Domain.Helpers;
 using System;
 using System.Text.RegularExpressions;
 
@@ -10,10 +12,12 @@ namespace BaseClinic.Domain.Entities
         private const int MaxDoctorAge = 75;
         private const decimal MaxConsultationFee = 10_000_000m;
         public const int DefaultSortOrder = 999;
+        public const int MaxSlugLength = 200;
 
         public Guid AccountId { get; private set; }
         public Guid DepartmentId { get; private set; }
         public string DoctorCode { get; private set; } = null!;
+        public string Slug { get; private set; } = string.Empty;
 
         // === Thông tin hành nghề ===
         public string? Title { get; private set; }              // BS, ThS, TS, PGS, GS
@@ -31,7 +35,7 @@ namespace BaseClinic.Domain.Entities
         public string? Description { get; private set; }
 
         // === Pháp lý ===
-        public string? LicenseNumber { get; private set; } = null!;   // BẮT BUỘC
+        public string? LicenseNumber { get; private set; }
         public DateTime? LicenseIssueDate { get; private set; }
         public DateTime? LicenseExpiryDate { get; private set; }
         public string? LicenseIssuedBy { get; private set; }
@@ -65,6 +69,7 @@ namespace BaseClinic.Domain.Entities
         Guid accountId,
         Guid departmentId,
         string doctorCode,
+        string? slug,
         string licenseNumber,
         DateTime? licenseIssueDate,
         DateTime? licenseExpiryDate,
@@ -81,6 +86,7 @@ namespace BaseClinic.Domain.Entities
             AccountId = accountId;
             DepartmentId = departmentId;
             DoctorCode = doctorCode.Trim().ToUpperInvariant();
+            UpdateSlug(slug ?? doctorCode);
 
             UpdateLicense(licenseNumber, licenseIssueDate, licenseExpiryDate, licenseIssuedBy);
             SetSortOrder(sortOrder);
@@ -88,6 +94,24 @@ namespace BaseClinic.Domain.Entities
         }
 
         // ==== PROFILE ====
+        // <summary>
+        /// Cập nhật slug.
+        /// - Nếu chuỗi rỗng → dùng DoctorCode làm fallback.
+        /// - Ngược lại → generate từ input.
+        /// </summary>
+        public void UpdateSlug(string? slug)
+        {
+            var source = string.IsNullOrWhiteSpace(slug) ? DoctorCode : slug;
+            var finalSlug = SlugHelper.Generate(source);
+
+            if (string.IsNullOrEmpty(finalSlug))
+                throw new DomainException("Không thể sinh slug cho bác sĩ.");
+
+            if (finalSlug.Length > MaxSlugLength)
+                throw new DomainException($"Slug không vượt quá {MaxSlugLength} ký tự.");
+
+            Slug = finalSlug;
+        }
         public void UpdateProfile(string? avatar, string? fullAddress, bool? gender,
                                   DateTime? dateOfBirth, string? identityNumber, string? description)
         {
@@ -134,19 +158,16 @@ namespace BaseClinic.Domain.Entities
         }
 
         // ==== PHÁP LÝ ====
-        public void UpdateLicense(string licenseNumber, DateTime? issueDate,
-                                  DateTime? expiryDate, string? issuedBy)
+        public void UpdateLicense(string? licenseNumber, DateTime? issueDate,
+                          DateTime? expiryDate, string? issuedBy)
         {
-            if (string.IsNullOrWhiteSpace(licenseNumber))
-                throw new ArgumentException("Số chứng chỉ hành nghề không được để trống.");
-
             if (issueDate.HasValue && expiryDate.HasValue && issueDate >= expiryDate)
-                throw new ArgumentException("Ngày cấp phải trước ngày hết hạn.");
+                throw new DomainException("Ngày cấp phải trước ngày hết hạn.");
 
             if (expiryDate.HasValue && expiryDate.Value.Date < DateTime.UtcNow.Date)
-                throw new ArgumentException("Chứng chỉ hành nghề đã hết hạn.");
+                throw new DomainException("Chứng chỉ hành nghề đã hết hạn.");
 
-            LicenseNumber = licenseNumber.Trim();
+            LicenseNumber = string.IsNullOrWhiteSpace(licenseNumber) ? null : licenseNumber.Trim();
             LicenseIssueDate = issueDate;
             LicenseExpiryDate = expiryDate;
             LicenseIssuedBy = issuedBy?.Trim();

@@ -1,4 +1,6 @@
 ﻿using BaseClinic.Domain.Common;
+using BaseClinic.Domain.Exceptions;
+using BaseClinic.Domain.Helpers;
 using System;
 using System.Text.RegularExpressions;
 
@@ -10,10 +12,14 @@ namespace BaseClinic.Domain.Entities
         public static readonly TimeOnly DefaultOpeningTime = new TimeOnly(7, 0);
         public static readonly TimeOnly DefaultClosingTime = new TimeOnly(17, 0);
         public const int DefaultSortOrder = 999;
+        public const int MaxSlugLength = 200;
 
         // ==================== PROPERTIES ====================
         public string Name { get; private set; } = null!;
         public string DepartmentCode { get; private set; } = null!;
+
+        // Auto-generate từ Name, Admin có thể override.
+        public string Slug { get; private set; } = string.Empty;
         public string? ImageUrl { get; private set; }
         public string? ShortDescription { get; private set; }
         public string? FullDescription { get; private set; }
@@ -47,6 +53,7 @@ namespace BaseClinic.Domain.Entities
         public Department(
             string name,
             string departmentCode,
+            string? slug,
             string? imageUrl,
             string? shortDescription,
             string? fullDescription,
@@ -61,6 +68,7 @@ namespace BaseClinic.Domain.Entities
             DepartmentCode = departmentCode.Trim().ToUpperInvariant();
 
             UpdateName(name);
+            UpdateSlug(slug ?? SlugHelper.Generate(name));
             UpdateDetails(imageUrl, shortDescription, fullDescription, location, phoneNumber);
             UpdateOperatingHours(
                 is24Hours,
@@ -79,6 +87,25 @@ namespace BaseClinic.Domain.Entities
                 throw new ArgumentException("Tên khoa không được vượt quá 100 ký tự.", nameof(name));
 
             Name = name.Trim();
+        }
+
+        /// <summary>
+        /// Cập nhật slug. Admin có thể gọi để override.
+        /// Nếu truyền chuỗi rỗng → auto-generate từ Name hiện tại.
+        /// </summary>
+        public void UpdateSlug(string? slug)
+        {
+            var finalSlug = string.IsNullOrWhiteSpace(slug)
+                ? SlugHelper.Generate(Name)
+                : SlugHelper.Generate(slug);
+
+            if (string.IsNullOrEmpty(finalSlug))
+                throw new DomainException("Không thể sinh slug từ tên khoa.");
+
+            if (finalSlug.Length > MaxSlugLength)
+                throw new DomainException($"Slug không vượt quá {MaxSlugLength} ký tự.");
+
+            Slug = finalSlug;
         }
 
         public void UpdateDetails(
