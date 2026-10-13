@@ -14,6 +14,7 @@
             ClinicDbContext context,
             CancellationToken cancellationToken = default)
         {
+            await DepartmentSeeder.SeedAsync(context, cancellationToken);
             await PermissionSeeder.SeedAsync(context, cancellationToken);
             await RoleSeeder.SeedAsync(context, cancellationToken);
             await RolePermissionSeeder.SeedAsync(context, cancellationToken);

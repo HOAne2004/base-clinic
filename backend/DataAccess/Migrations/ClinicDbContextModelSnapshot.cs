@@ -528,7 +528,6 @@ namespace BaseClinic.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("LicenseNumber")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -576,7 +575,8 @@ namespace BaseClinic.Migrations
                     b.HasIndex("IsActive");
 
                     b.HasIndex("LicenseNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[LicenseNumber] IS NOT NULL");
 
                     b.HasIndex("SortOrder");
 
@@ -1564,12 +1564,12 @@ namespace BaseClinic.Migrations
                     b.HasOne("BaseClinic.Domain.Entities.Department", "Department")
                         .WithMany()
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("BaseClinic.Domain.Entities.Doctor", "Doctor")
                         .WithMany()
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("BaseClinic.Domain.Entities.Patient", "Patient")
                         .WithMany()
@@ -1580,7 +1580,7 @@ namespace BaseClinic.Migrations
                     b.HasOne("BaseClinic.Domain.Entities.Doctor", "RequestedDoctor")
                         .WithMany()
                         .HasForeignKey("RequestedDoctorId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Department");
 

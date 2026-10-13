@@ -72,20 +72,20 @@ namespace BaseClinic.DataAccess.Configurations
             builder.HasOne(a => a.Doctor)
                 .WithMany()
                 .HasForeignKey(a => a.DoctorId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // 3. Appointment → RequestedDoctor (bác sĩ user yêu cầu, N-1, optional)
             // ⚡ CẦN chỉ định rõ navigation vì có 2 FK đến cùng bảng Doctors
             builder.HasOne(a => a.RequestedDoctor)
                 .WithMany()
                 .HasForeignKey(a => a.RequestedDoctorId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // 4. Appointment → Department (N-1, optional)
             builder.HasOne(a => a.Department)
                 .WithMany()
                 .HasForeignKey(a => a.DepartmentId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

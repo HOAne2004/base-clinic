@@ -1,32 +1,58 @@
 ﻿using BaseClinic.Business.Interfaces;
 using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.Business.Services.Departments.Commands
 {
-    public record DeactivateDepartmentCommand (Guid Id) : IRequest<bool>;
+    /// <summary>
+    /// Vô hiệu hóa khoa (tạm ngưng).
+    /// 
+    /// CASCADE: Tất cả Doctor trong khoa bị set IsActive = false.
+    /// (Bác sĩ vẫn tồn tại, chỉ không còn active).
+    /// </summary>
+    public record DeactivateDepartmentCommand(Guid Id) : IRequest<bool>;
 
-    public class DeactivateDepartmentCommandHandler : IRequestHandler<DeactivateDepartmentCommand, bool>
+    public class DeactivateDepartmentCommandHandler
+        : IRequestHandler<DeactivateDepartmentCommand, bool>
     {
-        private readonly IDepartmentRepository _departmentRepository;
+        private readonly IDepartmentRepository _departmentRepo;
+        private readonly IDoctorRepository _doctorRepo;
         private readonly IUnitOfWork _unitOfWork;
 
-        public DeactivateDepartmentCommandHandler(IDepartmentRepository departmentRepository, IUnitOfWork unitOfWork)
+        public DeactivateDepartmentCommandHandler(
+            IDepartmentRepository departmentRepo,
+            IDoctorRepository doctorRepo,
+            IUnitOfWork unitOfWork)
         {
-            _departmentRepository = departmentRepository;
+            _departmentRepo = departmentRepo;
+            _doctorRepo = doctorRepo;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<bool> Handle(DeactivateDepartmentCommand request, CancellationToken cancellation)
+        public async Task<bool> Handle(
+            DeactivateDepartmentCommand request,
+            CancellationToken cancellationToken)
         {
-            var department = await _departmentRepository.GetByIdAsync(request.Id, cancellation);
-            if (department == null)
-            {
-                throw new InvalidOperationException("Không tìm thấy thông tin khoa.");
-            }
+            var department = await _departmentRepo.GetByIdAsync(request.Id, cancellationToken)
+                ?? throw new NotFoundException("Không tìm thấy thông tin khoa.");
 
+            if (!department.IsActive)
+                throw new DomainException("Khoa này đã ở trạng thái không hoạt động.");
+
+            // 1. Deactivate department
             department.Deactivate();
-            await _unitOfWork.SaveChangesAsync(cancellation);
+
+            // 2. Cascade: deactivate tất cả doctors đang active trong khoa
+            var activeDoctors = await _doctorRepo.GetQueryableWithTracking()
+                .Where(d => d.DepartmentId == department.Id && d.IsActive)
+                .ToListAsync(cancellationToken);
+
+            foreach (var doctor in activeDoctors)
+                doctor.Deactivate();
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return true;
         }
     }

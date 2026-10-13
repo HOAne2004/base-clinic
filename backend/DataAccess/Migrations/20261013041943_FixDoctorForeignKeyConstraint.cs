@@ -6,18 +6,22 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BaseClinic.Migrations
 {
     /// <inheritdoc />
-    public partial class RefactorDB : Migration
+    public partial class FixDoctorForeignKeyConstraint : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Appointments_Departments_DepartmentId",
+                table: "Appointments");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Appointments_Doctors_RequestedDoctorId",
+                table: "Appointments");
+
             migrationBuilder.DropIndex(
                 name: "IX_PatientDelegations_TargetPatientId_ObserverAccountId",
                 table: "PatientDelegations");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Doctors_LicenseNumber",
-                table: "Doctors");
 
             migrationBuilder.DropColumn(
                 name: "UpdatedAt",
@@ -834,18 +838,6 @@ namespace BaseClinic.Migrations
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
-                name: "LicenseNumber",
-                table: "Doctors",
-                type: "nvarchar(50)",
-                maxLength: 50,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "nvarchar(50)",
-                oldMaxLength: 50,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<string>(
                 name: "IdentityNumber",
                 table: "Doctors",
                 type: "varchar(20)",
@@ -1566,12 +1558,6 @@ namespace BaseClinic.Migrations
                 column: "IsActive");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Doctors_LicenseNumber",
-                table: "Doctors",
-                column: "LicenseNumber",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Doctors_SortOrder",
                 table: "Doctors",
                 column: "SortOrder");
@@ -1669,12 +1655,28 @@ namespace BaseClinic.Migrations
                 unique: true);
 
             migrationBuilder.AddForeignKey(
+                name: "FK_Appointments_Departments_DepartmentId",
+                table: "Appointments",
+                column: "DepartmentId",
+                principalTable: "Departments",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_Appointments_Doctors_DoctorId",
                 table: "Appointments",
                 column: "DoctorId",
                 principalTable: "Doctors",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Appointments_Doctors_RequestedDoctorId",
+                table: "Appointments",
+                column: "RequestedDoctorId",
+                principalTable: "Doctors",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_PatientDelegations_Accounts_ObserverAccountId",
@@ -1713,7 +1715,15 @@ namespace BaseClinic.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
+                name: "FK_Appointments_Departments_DepartmentId",
+                table: "Appointments");
+
+            migrationBuilder.DropForeignKey(
                 name: "FK_Appointments_Doctors_DoctorId",
+                table: "Appointments");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Appointments_Doctors_RequestedDoctorId",
                 table: "Appointments");
 
             migrationBuilder.DropForeignKey(
@@ -1793,10 +1803,6 @@ namespace BaseClinic.Migrations
 
             migrationBuilder.DropIndex(
                 name: "IX_Doctors_IsActive",
-                table: "Doctors");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Doctors_LicenseNumber",
                 table: "Doctors");
 
             migrationBuilder.DropIndex(
@@ -2724,16 +2730,6 @@ namespace BaseClinic.Migrations
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
-                name: "LicenseNumber",
-                table: "Doctors",
-                type: "nvarchar(50)",
-                maxLength: 50,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(50)",
-                oldMaxLength: 50);
-
-            migrationBuilder.AlterColumn<string>(
                 name: "IdentityNumber",
                 table: "Doctors",
                 type: "nvarchar(20)",
@@ -2857,12 +2853,21 @@ namespace BaseClinic.Migrations
                 table: "PatientDelegations",
                 columns: new[] { "TargetPatientId", "ObserverAccountId" });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Doctors_LicenseNumber",
-                table: "Doctors",
-                column: "LicenseNumber",
-                unique: true,
-                filter: "[LicenseNumber] IS NOT NULL");
+            migrationBuilder.AddForeignKey(
+                name: "FK_Appointments_Departments_DepartmentId",
+                table: "Appointments",
+                column: "DepartmentId",
+                principalTable: "Departments",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Appointments_Doctors_RequestedDoctorId",
+                table: "Appointments",
+                column: "RequestedDoctorId",
+                principalTable: "Doctors",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
         }
     }
 }

@@ -11,17 +11,25 @@
             SystemPermissions.Role.Create,
             SystemPermissions.Role.Update,
             SystemPermissions.Role.Delete,
+
             SystemPermissions.Permission.View,
+
             SystemPermissions.RolePermission.View,
             SystemPermissions.RolePermission.Assign,
+
             SystemPermissions.Department.View,
             SystemPermissions.Department.Create,
             SystemPermissions.Department.Update,
             SystemPermissions.Department.Delete,
+            SystemPermissions.Department.Deactivate,   
+            SystemPermissions.Department.Activate,    
+            SystemPermissions.Department.Restore,    
+
             SystemPermissions.Doctor.View,
             SystemPermissions.Doctor.Create,
             SystemPermissions.Doctor.Update,
             SystemPermissions.Doctor.Delete,
+
             SystemPermissions.Patient.View,
             SystemPermissions.Patient.RequestRollback,
             SystemPermissions.Patient.ApproveRollback
