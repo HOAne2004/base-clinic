@@ -10,5 +10,10 @@ Thumbs.db
 # Log
 *.log
 
+# Build folders (.NET / C#)
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+
 backend/appsettings.json
 backend/appsettings.Development.json
