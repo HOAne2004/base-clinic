@@ -1,56 +1,75 @@
 ﻿using BaseClinic.Business.Interfaces;
 using BaseClinic.Business.Interfaces.Repositories;
+using BaseClinic.Domain.Entities;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.Business.Services.Doctors.Commands
 {
+    /// <summary>
+    /// Xóa mềm bác sĩ.
+    /// 
+    /// ĐIỀU KIỆN:
+    /// - Không có Appointment nào (bất kỳ status nào).
+    /// - DoctorSchedule: tự động hủy hết.
+    /// </summary>
     public record DeleteDoctorCommand(Guid Id) : IRequest<bool>;
 
-    public class DeleteDoctorCommandHandler : IRequestHandler<DeleteDoctorCommand, bool>
+    public class DeleteDoctorCommandHandler
+        : IRequestHandler<DeleteDoctorCommand, bool>
     {
-        private readonly IDoctorRepository _doctorRepository;
-        private readonly IAccountRepository _accountRepository; // Thêm AccountRepo
+        private readonly IDoctorRepository _doctorRepo;
+        private readonly IAppointmentRepository _appointmentRepo;
+        private readonly IRepository<DoctorSchedule> _scheduleRepo;
         private readonly IUnitOfWork _unitOfWork;
 
         public DeleteDoctorCommandHandler(
-            IDoctorRepository doctorRepository,
-            IAccountRepository accountRepository,
+            IDoctorRepository doctorRepo,
+            IAppointmentRepository appointmentRepo,
+            IRepository<DoctorSchedule> scheduleRepo,
             IUnitOfWork unitOfWork)
         {
-            _doctorRepository = doctorRepository;
-            _accountRepository = accountRepository;
+            _doctorRepo = doctorRepo;
+            _appointmentRepo = appointmentRepo;
+            _scheduleRepo = scheduleRepo;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<bool> Handle(DeleteDoctorCommand request, CancellationToken cancellation)
+        public async Task<bool> Handle(
+            DeleteDoctorCommand request,
+            CancellationToken cancellationToken)
         {
-            await _unitOfWork.BeginTransactionAsync(cancellation);
-            try
+            var doctor = await _doctorRepo.GetByIdAsync(request.Id, cancellationToken)
+                ?? throw new NotFoundException("Không tìm thấy bác sĩ.");
+
+            // Check không có Appointment
+            var hasAppointments = await _appointmentRepo.GetQueryable()
+                .AnyAsync(a => a.RequestedDoctorId == doctor.Id, cancellationToken);
+
+            if (hasAppointments)
+                throw new DomainException(
+                    "Không thể xóa bác sĩ vì vẫn còn lịch hẹn. " +
+                    "Vui lòng xử lý các lịch hẹn trước.");
+
+            // Hủy toàn bộ DoctorSchedule chưa Completed
+            var schedules = await _scheduleRepo.GetQueryableWithTracking()
+                .Where(s => s.DoctorId == doctor.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var schedule in schedules)
             {
-                var doctor = await _doctorRepository.GetByIdAsync(request.Id, cancellation);
-                if (doctor == null)
+                if (schedule.Status != Domain.Enums.DoctorScheduleStatus.Completed
+                    && schedule.Status != Domain.Enums.DoctorScheduleStatus.Cancelled)
                 {
-                    throw new InvalidOperationException("Bác sĩ không tồn tại.");
+                    schedule.CancelSchedule();
                 }
-
-                // 1. Lấy Account liên kết và khóa nó lại (thay vì xóa cứng Account)
-                var account = await _accountRepository.GetByIdAsync(doctor.AccountId, cancellation);
-                if (account != null)
-                {
-                    account.Deactivate("ToDo: Reason", account.Id); 
-                }
-
-                // 2. Xóa hồ sơ Bác sĩ
-                _doctorRepository.Delete(doctor); 
-
-                await _unitOfWork.CommitTransactionAsync(cancellation);
-                return true;
             }
-            catch
-            {
-                await _unitOfWork.RollbackTransactionAsync(cancellation);
-                throw;
-            }
+
+            _doctorRepo.Delete(doctor);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return true;
         }
     }
 }

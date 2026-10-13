@@ -129,6 +129,25 @@ namespace BaseClinic.Domain.Entities
             Description = description?.Trim();
         }
 
+        /// <summary>
+        /// Cập nhật hồ sơ self-profile — Doctor tự sửa.
+        /// CHỈ các field: Avatar, Biography, Languages, Description, IsAvailableForOnline.
+        /// Các field khác giữ nguyên (do Admin quản lý).
+        /// </summary>
+        public void UpdateSelfProfile(
+            string? avatar,
+            string? biography,
+            string? languages,
+            string? description,
+            bool isAvailableForOnline)
+        {
+            Avatar = string.IsNullOrWhiteSpace(avatar) ? null : avatar.Trim();
+            Biography = string.IsNullOrWhiteSpace(biography) ? null : biography.Trim();
+            Languages = string.IsNullOrWhiteSpace(languages) ? null : languages.Trim();
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+            SetOnlineAvailability(isAvailableForOnline);
+        }
+
         // ==== NGHỀ NGHIỆP ====
         public void UpdateProfessionalInfo(string? title, string? specialization,
                                            int? yearsOfExperience, string? biography, string? languages)
@@ -178,7 +197,14 @@ namespace BaseClinic.Domain.Entities
                && LicenseExpiryDate.Value.Date <= DateTime.UtcNow.Date.AddDays(days);
 
         // ==== VẬN HÀNH ====
-        public void SetOnlineAvailability(bool isAvailable) => IsAvailableForOnline = isAvailable;
+        public void SetOnlineAvailability(bool isAvailable)
+        {
+            if (isAvailable && !IsActive)
+                throw new DomainException(
+                    "Không thể bật đặt online cho bác sĩ đang tạm ngưng.");
+
+            IsAvailableForOnline = isAvailable;
+        }
 
         public void UpdateWorkload(int? maxPatientsPerDay, DateTime? joinDate)
         {

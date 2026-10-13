@@ -1,73 +1,93 @@
 ﻿using BaseClinic.Business.Interfaces;
 using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Business.Interfaces.Services;
-using BaseClinic.Business.Models;
+using BaseClinic.Domain.Constants;
 using BaseClinic.Domain.Entities;
-using BaseClinic.Domain.Enums;
+using BaseClinic.Domain.Exceptions;
 using MediatR;
-using System.Threading;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.Business.Services.Doctors.Commands
 {
     public record CreateDoctorCommand(
-            // Thông tin Account
-            string FullName,
-            string PhoneNumber,
-            string? Email,
-            string Password,
+        // Account
+        string FullName,
+        string PhoneNumber,
+        string? Email,
+        string Password,
 
-            // Thông tin Doctor
-            Guid DepartmentId,
-            string? Avatar,
-            string? FullAddress,
-            bool? Gender,
-            DateTime? DateOfBirth,
-            string? IdentityNumber,
-            string? LicenseNumber,
-            decimal? ConsultationFee,
-            string? Description
-        ) : IRequest<Guid>;
+        // Doctor
+        Guid DepartmentId,
+        string? Slug,           // null = auto-generate từ FullName
+        string? Avatar,
+        string? FullAddress,
+        bool? Gender,
+        DateTime? DateOfBirth,
+        string? IdentityNumber,
+        string? LicenseNumber,
+        decimal? ConsultationFee,
+        string? Description
+    ) : IRequest<Guid>;
 
-    public class CreateDoctorCommandHandler : IRequestHandler<CreateDoctorCommand, Guid>
+    public class CreateDoctorCommandHandler
+        : IRequestHandler<CreateDoctorCommand, Guid>
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IAccountRepository _accountRepository;
-        private readonly IRoleRepository _roleRepository;
+        private readonly IAccountRepository _accountRepo;
+        private readonly IRoleRepository _roleRepo;
         private readonly IDoctorCodeGenerator _doctorCodeGenerator;
-        private readonly IDoctorRepository _doctorRepository;
+        private readonly IDoctorRepository _doctorRepo;
+        private readonly IDepartmentRepository _departmentRepo;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly ISlugGenerator _slugGenerator;
 
         public CreateDoctorCommandHandler(
-            IUnitOfWork unitOfWork, 
-            IAccountRepository accountRepository,
-            IRoleRepository roleRepository,
+            IUnitOfWork unitOfWork,
+            IAccountRepository accountRepo,
+            IRoleRepository roleRepo,
             IDoctorCodeGenerator doctorCodeGenerator,
-            IDoctorRepository doctorRepository,
-            IPasswordHasher passwordHasher)
+            IDoctorRepository doctorRepo,
+            IDepartmentRepository departmentRepo,
+            IPasswordHasher passwordHasher,
+            ISlugGenerator slugGenerator)
         {
             _unitOfWork = unitOfWork;
-            _accountRepository = accountRepository;
-            _roleRepository = roleRepository;
+            _accountRepo = accountRepo;
+            _roleRepo = roleRepo;
             _doctorCodeGenerator = doctorCodeGenerator;
-            _doctorRepository = doctorRepository;
+            _doctorRepo = doctorRepo;
+            _departmentRepo = departmentRepo;
             _passwordHasher = passwordHasher;
+            _slugGenerator = slugGenerator;
         }
 
-        public async Task<Guid> Handle(CreateDoctorCommand request, CancellationToken cancellationToken)
+        public async Task<Guid> Handle(
+            CreateDoctorCommand request,
+            CancellationToken cancellationToken)
         {
-            // Mở giao dịch vì quá trình này tác động đến nhiều bảng
             await _unitOfWork.BeginTransactionAsync(cancellationToken);
-
             try
             {
-                // BƯỚC 1: XÁC THỰC VÀ TẠO ACCOUNT
-                var existingAccount = await _accountRepository.ExistsByPhoneAsync(request.PhoneNumber, cancellationToken);
-                if (existingAccount)
-                {
-                    throw new InvalidOperationException("Số điện thoại này đã được sử dụng cho một tài khoản khác.");
-                }
+                // ==================== BƯỚC 1: Validate ====================
+                // Check Department tồn tại + active
+                var department = await _departmentRepo.GetByIdAsync(
+                    request.DepartmentId, cancellationToken)
+                    ?? throw new NotFoundException("Không tìm thấy khoa.");
 
-                string hashedPassword = _passwordHasher.Hash(request.Password);
+                if (!department.IsActive)
+                    throw new DomainException(
+                        "Không thể tạo bác sĩ cho khoa đang tạm ngưng.");
+
+                // Check SĐT chưa tồn tại
+                var exists = await _accountRepo.ExistsByPhoneAsync(
+                    request.PhoneNumber, cancellationToken);
+
+                if (exists)
+                    throw new DomainException(
+                        "Số điện thoại này đã được sử dụng cho một tài khoản khác.");
+
+                // ==================== BƯỚC 2: Tạo Account ====================
+                var hashedPassword = _passwordHasher.Hash(request.Password);
 
                 var account = new Account(
                     fullName: request.FullName,
@@ -75,35 +95,46 @@ namespace BaseClinic.Business.Services.Doctors.Commands
                     passwordHash: hashedPassword,
                     email: request.Email);
 
-                // Account mặc định Inactive → Admin tạo nên Active luôn
                 account.VerifyPhoneNumber();
                 account.Activate();
 
-                _accountRepository.Add(account);
-
-                // Cần lưu thay đổi để EF Core cấp phát GUID cho Account.Id
+                _accountRepo.Add(account);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                // BƯỚC 2: TÌM VÀ GÁN ROLE "DOCTOR" CHO ACCOUNT VỪA TẠO
-                var doctorRole = await _roleRepository.GetByCodeAsync("Doctor", cancellationToken)
-                    ?? throw new InvalidOperationException("Role hệ thống 'Doctor' chưa được khởi tạo trong Database.");
+                // ==================== BƯỚC 3: Gán Role Doctor ====================
+                var doctorRole = await _roleRepo.GetByCodeAsync(
+                    SystemRoles.Doctor, cancellationToken)
+                    ?? throw new DomainException(
+                        $"Role '{SystemRoles.Doctor}' chưa được khởi tạo.");
 
                 account.AssignRole(doctorRole.Id);
-                await _unitOfWork.SaveChangesAsync(cancellationToken); // Lưu role trung gian
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                // BƯỚC 3: KHỞI TẠO HỒ SƠ DOCTOR
-                string doctorCode = await _doctorCodeGenerator.GenerateAsync(cancellationToken);
+                // ==================== BƯỚC 4: Sinh DoctorCode + Slug ====================
+                string doctorCode = await _doctorCodeGenerator
+                    .GenerateAsync(cancellationToken);
 
+                // Slug: ưu tiên input, fallback về FullName
+                var slugSource = !string.IsNullOrWhiteSpace(request.Slug)
+                    ? request.Slug
+                    : request.FullName;
+
+                var uniqueSlug = await _slugGenerator.GenerateUniqueDoctorSlugAsync(
+                    input: slugSource,
+                    excludeId: null,
+                    cancellationToken: cancellationToken);
+
+                // ==================== BƯỚC 5: Tạo Doctor ====================
                 var doctor = new Doctor(
                     accountId: account.Id,
                     departmentId: request.DepartmentId,
                     doctorCode: doctorCode,
-                    licenseNumber: request.LicenseNumber ?? "PENDING",  // Bắt buộc
+                    licenseNumber: request.LicenseNumber ?? string.Empty,   // nullable
                     licenseIssueDate: null,
                     licenseExpiryDate: null,
-                    licenseIssuedBy: null);
+                    licenseIssuedBy: null,
+                    slug: uniqueSlug);
 
-                // Set các field profile qua UpdateProfile
                 doctor.UpdateProfile(
                     avatar: request.Avatar,
                     fullAddress: request.FullAddress,
@@ -112,13 +143,12 @@ namespace BaseClinic.Business.Services.Doctors.Commands
                     identityNumber: request.IdentityNumber,
                     description: request.Description);
 
-                // Set consultation fee
                 if (request.ConsultationFee.HasValue)
                     doctor.UpdateConsultationFee(request.ConsultationFee.Value);
 
-                _doctorRepository.Add(doctor);
+                _doctorRepo.Add(doctor);
 
-                // BƯỚC 4: LƯU TOÀN BỘ SỰ THAY ĐỔI
+                // ==================== BƯỚC 6: Commit ====================
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
                 return doctor.Id;

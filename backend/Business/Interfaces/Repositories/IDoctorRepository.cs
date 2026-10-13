@@ -8,5 +8,6 @@ namespace BaseClinic.Business.Interfaces.Repositories
     /// </summary>
     public interface IDoctorRepository : IRepository<Doctor>
     {
+        Task<Doctor?> GetByAccountIdAsync(Guid accountId, CancellationToken cancellationToken = default);
     }
 }

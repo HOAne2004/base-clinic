@@ -1,5 +1,6 @@
 ﻿using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseClinic.DataAccess.Repositories
 {
@@ -7,6 +8,12 @@ namespace BaseClinic.DataAccess.Repositories
     {
         public DoctorRepository(ClinicDbContext context) : base(context) { }
 
-        // Không có method đặc thù — tất cả dùng base.
+        public async Task<Doctor?> GetByAccountIdAsync(
+            Guid accountId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .FirstOrDefaultAsync(d => d.AccountId == accountId, cancellationToken);
+        }
     }
 }
