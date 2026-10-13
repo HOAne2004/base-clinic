@@ -109,6 +109,27 @@ namespace BaseClinic.Business.Mappers
                 SortOrder: dept.SortOrder);
         }
 
+        /// <summary>
+        /// Map sang DepartmentPublicListDto (cho landing page).
+        /// </summary>
+        public static DepartmentPublicListDto ToPublicListDto(
+            Department dept,
+            int activeDoctorCount)
+        {
+            return new DepartmentPublicListDto(
+                Id: dept.Id,
+                Name: dept.Name,
+                ImageUrl: dept.ImageUrl,
+                ShortDescription: dept.ShortDescription,
+                Location: dept.Location,
+                PhoneNumber: dept.PhoneNumber,
+                IsActive: dept.IsActive,
+                Is24Hours: dept.Is24Hours,
+                OpeningTime: dept.OpeningTime,
+                ClosingTime: dept.ClosingTime,
+                ActiveDoctorCount: activeDoctorCount);
+        }
+
         // ==================== DOCTOR HELPERS ====================
 
         private static DepartmentDoctorSummaryDto ToDoctorSummaryDto(

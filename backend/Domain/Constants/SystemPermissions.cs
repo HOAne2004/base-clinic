@@ -34,6 +34,15 @@
 
             [PermissionInfo("Xóa/vô hiệu hóa khoa.", "Department", "Delete", 4)]
             public const string Delete = "department:delete";
+
+            [PermissionInfo("Vô hiệu hóa khoa.", "Department", "Deactivate", 5)]
+            public const string Deactivate = "department:deactivate";
+
+            [PermissionInfo("Kích hoạt lại khoa.", "Department", "Activate", 6)]
+            public const string Activate = "department:activate";
+
+            [PermissionInfo("Khôi phục khoa đã xóa mềm.", "Department", "Restore", 7)]
+            public const string Restore = "department:restore";
         }
 
         public static class Doctor
