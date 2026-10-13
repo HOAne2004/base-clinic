@@ -25,13 +25,35 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.Account", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeactivatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeactivatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DeactivationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Email")
@@ -45,6 +67,9 @@ namespace BaseClinic.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("bit");
@@ -61,6 +86,9 @@ namespace BaseClinic.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("MustChangePasswordOnNextLogin")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -72,19 +100,29 @@ namespace BaseClinic.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(20)");
 
-                    b.Property<DateTimeOffset?>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetimeoffset");
+                    b.Property<string>("PreferredLanguage")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("vi");
 
-                    b.Property<string>("RefreshTokenHash")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("SecurityStamp")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -95,6 +133,8 @@ namespace BaseClinic.Migrations
 
                     b.HasIndex("PhoneNumber")
                         .IsUnique();
+
+                    b.HasIndex("Status");
 
                     b.ToTable("Accounts", (string)null);
                 });
@@ -107,6 +147,15 @@ namespace BaseClinic.Migrations
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset>("AssignedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("AssignedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("AccountId", "RoleId");
 
                     b.HasIndex("RoleId");
@@ -117,33 +166,64 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.Appointment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AppointmentCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime>("AppointmentDate")
-                        .HasColumnType("date");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("CancelReason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ContactPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int?>("ContactRelationship")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Reason")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -156,19 +236,31 @@ namespace BaseClinic.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AppointmentCode")
+                        .IsUnique();
+
                     b.HasIndex("DepartmentId");
+
+                    b.HasIndex("DoctorId");
 
                     b.HasIndex("PatientId");
 
                     b.HasIndex("RequestedDoctorId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("AppointmentDate", "DoctorId");
 
                     b.ToTable("Appointments", (string)null);
                 });
@@ -176,16 +268,24 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.Consultation", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DiagnosisCode")
@@ -205,6 +305,9 @@ namespace BaseClinic.Migrations
                     b.Property<DateTime?>("FollowUpDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("RecordDate")
                         .HasColumnType("datetime2");
 
@@ -218,10 +321,13 @@ namespace BaseClinic.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -236,13 +342,24 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.Department", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<TimeOnly>("ClosingTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DepartmentCode")
@@ -250,7 +367,7 @@ namespace BaseClinic.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("FullDescription")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
@@ -258,20 +375,52 @@ namespace BaseClinic.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<bool>("Is24Hours")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<TimeOnly>("OpeningTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("ShortDescription")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(999);
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -279,13 +428,16 @@ namespace BaseClinic.Migrations
                     b.HasIndex("DepartmentCode")
                         .IsUnique();
 
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("SortOrder");
+
                     b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Doctor", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AccountId")
@@ -295,17 +447,30 @@ namespace BaseClinic.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("Biography")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
                     b.Property<decimal?>("ConsultationFee")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
@@ -328,17 +493,72 @@ namespace BaseClinic.Migrations
 
                     b.Property<string>("IdentityNumber")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsAvailableForOnline")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("JoinDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Languages")
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime?>("LicenseExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LicenseIssueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LicenseIssuedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("LicenseNumber")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<int?>("MaxPatientsPerDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(999);
+
+                    b.Property<string>("Specialization")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("YearsOfExperience")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -353,9 +573,12 @@ namespace BaseClinic.Migrations
                         .IsUnique()
                         .HasFilter("[IdentityNumber] IS NOT NULL");
 
+                    b.HasIndex("IsActive");
+
                     b.HasIndex("LicenseNumber")
-                        .IsUnique()
-                        .HasFilter("[LicenseNumber] IS NOT NULL");
+                        .IsUnique();
+
+                    b.HasIndex("SortOrder");
 
                     b.ToTable("Doctors", (string)null);
                 });
@@ -363,13 +586,21 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.DoctorSchedule", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("DoctorId")
@@ -377,6 +608,9 @@ namespace BaseClinic.Migrations
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<int>("MaxPatientPerSlot")
                         .HasColumnType("int");
@@ -393,10 +627,13 @@ namespace BaseClinic.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("WorkDate")
@@ -406,13 +643,14 @@ namespace BaseClinic.Migrations
 
                     b.HasIndex("DoctorId", "WorkDate");
 
+                    b.HasIndex("DoctorId", "WorkDate", "StartTime");
+
                     b.ToTable("DoctorSchedules", (string)null);
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Encounter", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AppointmentId")
@@ -421,10 +659,19 @@ namespace BaseClinic.Migrations
                     b.Property<DateTime>("CheckInAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("EncounterCode")
@@ -435,16 +682,22 @@ namespace BaseClinic.Migrations
                     b.Property<DateTime?>("EndAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -459,20 +712,62 @@ namespace BaseClinic.Migrations
                     b.ToTable("Encounters", (string)null);
                 });
 
+            modelBuilder.Entity("BaseClinic.Domain.Entities.LoginHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DeviceInfo")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("IsSuccess")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("LoginAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "LoginAt");
+
+                    b.ToTable("LoginHistories", (string)null);
+                });
+
             modelBuilder.Entity("BaseClinic.Domain.Entities.Medicine", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ActiveIngredient")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
@@ -484,6 +779,9 @@ namespace BaseClinic.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsPrescriptionRequired")
@@ -504,10 +802,13 @@ namespace BaseClinic.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -518,31 +819,129 @@ namespace BaseClinic.Migrations
                     b.ToTable("Medicines", (string)null);
                 });
 
+            modelBuilder.Entity("BaseClinic.Domain.Entities.MergeRollbackRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConflictResolutions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("PatientMergeLogId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("RequestedByAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ReviewedByAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientMergeLogId");
+
+                    b.HasIndex("RequestedByAccountId");
+
+                    b.HasIndex("ReviewedByAccountId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("MergeRollbackRequests", (string)null);
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.OtpCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Attempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("MaxAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "Purpose", "ExpiresAt");
+
+                    b.ToTable("OtpCodes", (string)null);
+                });
+
             modelBuilder.Entity("BaseClinic.Domain.Entities.Patient", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("AccountId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Avatar")
+                    b.Property<string>("AvatarUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("FullAddress")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -552,34 +951,63 @@ namespace BaseClinic.Migrations
                     b.Property<bool?>("Gender")
                         .HasColumnType("bit");
 
+                    b.Property<string>("HealthInsuranceNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("IdentityNumber")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<bool?>("IsPrimary")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("MergedIntoPatientId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PatientCode")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<Guid?>("PrimaryPatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("RelationshipType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
+                    b.HasIndex("FullName");
+
+                    b.HasIndex("HealthInsuranceNumber")
+                        .IsUnique()
+                        .HasFilter("[HealthInsuranceNumber] IS NOT NULL");
+
                     b.HasIndex("IdentityNumber")
                         .IsUnique()
                         .HasFilter("[IdentityNumber] IS NOT NULL");
 
+                    b.HasIndex("MergedIntoPatientId");
+
                     b.HasIndex("PatientCode")
                         .IsUnique();
+
+                    b.HasIndex("PrimaryPatientId");
 
                     b.ToTable("Patients", (string)null);
                 });
@@ -587,14 +1015,25 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.PatientDelegation", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<int>("AccessLevel")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ApprovedByAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("GrantedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("ObserverAccountId")
                         .HasColumnType("uniqueidentifier");
@@ -602,59 +1041,155 @@ namespace BaseClinic.Migrations
                     b.Property<int>("RelationshipType")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("RequestedByAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RevokeReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<Guid>("TargetPatientId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ObserverAccountId");
 
-                    b.HasIndex("TargetPatientId", "ObserverAccountId");
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TargetPatientId");
+
+                    b.HasIndex("TargetPatientId", "ObserverAccountId")
+                        .IsUnique()
+                        .HasFilter("[Status] IN (1, 2)");
 
                     b.ToTable("PatientDelegations", (string)null);
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.PatientMergeLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsRolledBack")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("MergedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("MergedByAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MergedPatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MergedSnapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("RollbackReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("RolledBackAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("RolledBackByAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SurvivorPatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MergedAt");
+
+                    b.HasIndex("MergedPatientId");
+
+                    b.HasIndex("SurvivorPatientId");
+
+                    b.ToTable("PatientMergeLogs", (string)null);
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Permission", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Resource")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Resource")
-                        .IsRequired()
+                    b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("Resource");
 
                     b.ToTable("Permissions", (string)null);
                 });
@@ -662,17 +1197,28 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.Prescription", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ConsultationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("IssuedDate")
                         .HasColumnType("date");
@@ -689,10 +1235,13 @@ namespace BaseClinic.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ValidUntil")
@@ -711,7 +1260,6 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.PrescriptionItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("DurationDays")
@@ -754,17 +1302,28 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.Queue", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<Guid?>("CreatedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("QueueCode")
                         .IsRequired()
@@ -780,10 +1339,13 @@ namespace BaseClinic.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -799,7 +1361,6 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.QueueEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CallAt")
@@ -836,21 +1397,92 @@ namespace BaseClinic.Migrations
                     b.ToTable("QueueEntries", (string)null);
                 });
 
-            modelBuilder.Entity("BaseClinic.Domain.Entities.Role", b =>
+            modelBuilder.Entity("BaseClinic.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("CreatedBy")
+                    b.Property<string>("DeviceInfo")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("IsTrusted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("RevokeReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("RefreshTokens", (string)null);
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("IsSystemRole")
                         .ValueGeneratedOnAdd()
@@ -859,16 +1491,27 @@ namespace BaseClinic.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<int>("Priority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<Guid?>("UpdatedBy")
+                    b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
 
                     b.ToTable("Roles", (string)null);
                 });
@@ -879,6 +1522,15 @@ namespace BaseClinic.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("PermissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("GrantedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("GrantedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("RoleId", "PermissionId");
@@ -897,7 +1549,7 @@ namespace BaseClinic.Migrations
                         .IsRequired();
 
                     b.HasOne("BaseClinic.Domain.Entities.Role", "Role")
-                        .WithMany()
+                        .WithMany("AccountRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -909,21 +1561,34 @@ namespace BaseClinic.Migrations
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Appointment", b =>
                 {
-                    b.HasOne("BaseClinic.Domain.Entities.Department", null)
+                    b.HasOne("BaseClinic.Domain.Entities.Department", "Department")
                         .WithMany()
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("BaseClinic.Domain.Entities.Patient", null)
+                    b.HasOne("BaseClinic.Domain.Entities.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BaseClinic.Domain.Entities.Patient", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("BaseClinic.Domain.Entities.Doctor", null)
+                    b.HasOne("BaseClinic.Domain.Entities.Doctor", "RequestedDoctor")
                         .WithMany()
                         .HasForeignKey("RequestedDoctorId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("RequestedDoctor");
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Consultation", b =>
@@ -980,12 +1645,144 @@ namespace BaseClinic.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("BaseClinic.Domain.Entities.LoginHistory", b =>
+                {
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "Account")
+                        .WithMany("LoginHistories")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.MergeRollbackRequest", b =>
+                {
+                    b.HasOne("BaseClinic.Domain.Entities.PatientMergeLog", "PatientMergeLog")
+                        .WithMany()
+                        .HasForeignKey("PatientMergeLogId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "RequestedByAccount")
+                        .WithMany()
+                        .HasForeignKey("RequestedByAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "ReviewedByAccount")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PatientMergeLog");
+
+                    b.Navigation("RequestedByAccount");
+
+                    b.Navigation("ReviewedByAccount");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.OtpCode", b =>
+                {
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "Account")
+                        .WithMany("OtpCodes")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("BaseClinic.Domain.Entities.Patient", b =>
                 {
-                    b.HasOne("BaseClinic.Domain.Entities.Account", null)
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "Account")
                         .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BaseClinic.Domain.Entities.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("MergedIntoPatientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BaseClinic.Domain.Entities.Patient", "PrimaryPatient")
+                        .WithMany("Dependents")
+                        .HasForeignKey("PrimaryPatientId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.OwnsOne("BaseClinic.Domain.ValueObjects.Address", "Address", b1 =>
+                        {
+                            b1.Property<Guid>("PatientId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Duong")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("Duong");
+
+                            b1.Property<string>("SoNha")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("SoNha");
+
+                            b1.Property<string>("Tinh")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("Tinh");
+
+                            b1.Property<string>("Xa")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("Xa");
+
+                            b1.HasKey("PatientId");
+
+                            b1.ToTable("Patients");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PatientId");
+                        });
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Address")
+                        .IsRequired();
+
+                    b.Navigation("PrimaryPatient");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.PatientDelegation", b =>
+                {
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "ObserverAccount")
+                        .WithMany()
+                        .HasForeignKey("ObserverAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BaseClinic.Domain.Entities.Patient", "TargetPatient")
+                        .WithMany("Delegations")
+                        .HasForeignKey("TargetPatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ObserverAccount");
+
+                    b.Navigation("TargetPatient");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.PatientMergeLog", b =>
+                {
+                    b.HasOne("BaseClinic.Domain.Entities.Patient", "SurvivorPatient")
+                        .WithMany()
+                        .HasForeignKey("SurvivorPatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SurvivorPatient");
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Prescription", b =>
@@ -1036,10 +1833,21 @@ namespace BaseClinic.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("BaseClinic.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "Account")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("BaseClinic.Domain.Entities.RolePermission", b =>
                 {
                     b.HasOne("BaseClinic.Domain.Entities.Permission", "Permission")
-                        .WithMany()
+                        .WithMany("RolePermissions")
                         .HasForeignKey("PermissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1058,6 +1866,24 @@ namespace BaseClinic.Migrations
             modelBuilder.Entity("BaseClinic.Domain.Entities.Account", b =>
                 {
                     b.Navigation("AccountRoles");
+
+                    b.Navigation("LoginHistories");
+
+                    b.Navigation("OtpCodes");
+
+                    b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.Patient", b =>
+                {
+                    b.Navigation("Delegations");
+
+                    b.Navigation("Dependents");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Prescription", b =>
@@ -1072,6 +1898,8 @@ namespace BaseClinic.Migrations
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Role", b =>
                 {
+                    b.Navigation("AccountRoles");
+
                     b.Navigation("RolePermissions");
                 });
 #pragma warning restore 612, 618

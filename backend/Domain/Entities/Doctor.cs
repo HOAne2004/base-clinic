@@ -9,6 +9,7 @@ namespace BaseClinic.Domain.Entities
         private const int MinDoctorAge = 22;
         private const int MaxDoctorAge = 75;
         private const decimal MaxConsultationFee = 10_000_000m;
+        public const int DefaultSortOrder = 999;
 
         public Guid AccountId { get; private set; }
         public Guid DepartmentId { get; private set; }
@@ -27,6 +28,7 @@ namespace BaseClinic.Domain.Entities
         public bool? Gender { get; private set; }
         public DateTime? DateOfBirth { get; private set; }
         public string? IdentityNumber { get; private set; }
+        public string? Description { get; private set; }
 
         // === Pháp lý ===
         public string LicenseNumber { get; private set; } = null!;   // BẮT BUỘC
@@ -40,23 +42,49 @@ namespace BaseClinic.Domain.Entities
         public int? MaxPatientsPerDay { get; private set; }
         public DateTime? JoinDate { get; private set; }
 
-        public string? Description { get; private set; }
+        // ==================== TRẠNG THÁI CÔNG TÁC ====================
+        /// <summary>
+        /// Bác sĩ có đang công tác không.
+        /// - true: Đang làm việc bình thường.
+        /// - false: Tạm ngưng / Đã nghỉ việc.
+        /// Khác với IsAvailableForOnline (cho phép đặt online).
+        /// Khác với IsDeleted (xóa mềm).
+        /// </summary>
+        public bool IsActive { get; private set; } = true;
+
+        /// <summary>
+        /// Thứ tự sắp xếp khi hiển thị danh sách.
+        /// Số nhỏ hiển thị trước. Default = 0.
+        /// </summary>
+        public int SortOrder { get; private set; }
+
 
         private Doctor() { }
 
-        public Doctor(Guid accountId, Guid departmentId, string doctorCode,
-                      string licenseNumber, DateTime? licenseIssueDate, DateTime? licenseExpiryDate,
-                      string? licenseIssuedBy)
+        public Doctor(
+        Guid accountId,
+        Guid departmentId,
+        string doctorCode,
+        string licenseNumber,
+        DateTime? licenseIssueDate,
+        DateTime? licenseExpiryDate,
+        string? licenseIssuedBy,
+        int sortOrder = DefaultSortOrder)   
         {
-            if (accountId == Guid.Empty) throw new ArgumentException("AccountId không hợp lệ.");
-            if (departmentId == Guid.Empty) throw new ArgumentException("DepartmentId không hợp lệ.");
-            if (string.IsNullOrWhiteSpace(doctorCode)) throw new ArgumentException("DoctorCode không được để trống.");
+            if (accountId == Guid.Empty)
+                throw new ArgumentException("AccountId không hợp lệ.");
+            if (departmentId == Guid.Empty)
+                throw new ArgumentException("DepartmentId không hợp lệ.");
+            if (string.IsNullOrWhiteSpace(doctorCode))
+                throw new ArgumentException("DoctorCode không được để trống.");
 
             AccountId = accountId;
             DepartmentId = departmentId;
             DoctorCode = doctorCode.Trim().ToUpperInvariant();
 
             UpdateLicense(licenseNumber, licenseIssueDate, licenseExpiryDate, licenseIssuedBy);
+            SetSortOrder(sortOrder);
+            Activate();   // Default active
         }
 
         // ==== PROFILE ====
@@ -137,6 +165,33 @@ namespace BaseClinic.Domain.Entities
                 throw new ArgumentException("Số bệnh nhân tối đa/ngày không hợp lệ.");
             MaxPatientsPerDay = maxPatientsPerDay;
             JoinDate = joinDate;
+        }
+
+        // ==================== TRẠNG THÁI ====================
+        /// <summary>Đánh dấu bác sĩ đang công tác.</summary>
+        public void Activate() => IsActive = true;
+
+        /// <summary>
+        /// Đánh dấu bác sĩ tạm ngưng / nghỉ việc.
+        /// Đồng thời tắt đặt online để tránh book nhầm.
+        /// </summary>
+        public void Deactivate()
+        {
+            IsActive = false;
+            IsAvailableForOnline = false;
+        }
+
+        /// <summary>
+        /// Cập nhật thứ tự sắp xếp hiển thị.
+        /// </summary>
+        public void SetSortOrder(int sortOrder)
+        {
+            if (sortOrder < 1)
+                throw new ArgumentException(
+                    "Thứ tự sắp xếp >= 1.",
+                    nameof(sortOrder));
+
+            SortOrder = sortOrder;
         }
 
         // ==== HELPERS ====

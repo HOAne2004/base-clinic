@@ -14,26 +14,48 @@ namespace BaseClinic.DataAccess.Configurations
 
             builder.Property(x => x.DoctorId).IsRequired();
 
-            // Cấu hình kiểu dữ liệu ngày giờ
-            builder.Property(x => x.WorkDate).HasColumnType("date").IsRequired();
-            builder.Property(x => x.StartTime).IsRequired();
-            builder.Property(x => x.EndTime).IsRequired();
+            // ==================== TIME ====================
+            builder.Property(x => x.WorkDate)
+                .HasColumnType("date")
+                .IsRequired();
 
-            builder.Property(x => x.SlotDurationMinutes).IsRequired();
-            builder.Property(x => x.MaxPatientPerSlot).IsRequired();
-            builder.Property(x => x.OnlineBookingCapacity).IsRequired();
+            builder.Property(x => x.StartTime)
+                .IsRequired();
 
-            // Enum Status thường được lưu dưới dạng int
-            builder.Property(x => x.Status).IsRequired();
+            builder.Property(x => x.EndTime)
+                .IsRequired();
 
-            // Ràng buộc liên kết với Doctor
+            builder.Property(x => x.SlotDurationMinutes)
+                .IsRequired();
+
+            builder.Property(x => x.MaxPatientPerSlot)
+                .IsRequired();
+
+            builder.Property(x => x.OnlineBookingCapacity)
+                .IsRequired();
+
+            builder.Property(x => x.Status)
+                .IsRequired();
+
+            // ==================== RELATIONSHIPS ====================
             builder.HasOne<Doctor>()
                 .WithMany()
                 .HasForeignKey(x => x.DoctorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Index hỗ trợ truy vấn nhanh theo Doctor và Ngày
+            // ==================== INDEXES ====================
+            // Query nhanh theo doctor + ngày
             builder.HasIndex(x => new { x.DoctorId, x.WorkDate });
+
+            // ⚡ CHỐNG TRÙNG CA:
+            // 1 doctor không thể có 2 ca cùng ngày bắt đầu cùng giờ.
+            // Nếu cho phép overlap (tăng capacity) → bỏ unique này.
+            // Nếu chặn overlap → giữ.
+            //
+            // ⚠️ Bạn đã chọn "tăng capacity" khi overlap.
+            // → KHÔNG dùng unique index.
+            // → Chỉ dùng index thường để query.
+            builder.HasIndex(x => new { x.DoctorId, x.WorkDate, x.StartTime });
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BaseClinic.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using BaseClinic.Domain.Entities;
 
 namespace BaseClinic.DataAccess.Configurations
 {
@@ -12,11 +12,11 @@ namespace BaseClinic.DataAccess.Configurations
 
             builder.HasKey(x => x.Id);
 
+            // ==================== BASIC INFO ====================
             builder.Property(x => x.Name)
                 .IsRequired()
                 .HasMaxLength(100);
 
-            // DepartmentCode không được đổi và phải là duy nhất
             builder.Property(x => x.DepartmentCode)
                 .IsRequired()
                 .HasMaxLength(20);
@@ -32,9 +32,39 @@ namespace BaseClinic.DataAccess.Configurations
             builder.Property(x => x.FullDescription)
                 .HasMaxLength(1000);
 
+            // ==================== LOCATION & CONTACT ====================
+            builder.Property(x => x.Location)
+                .HasMaxLength(200);
+
+            builder.Property(x => x.PhoneNumber)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+
+            // ==================== OPERATING HOURS ====================
+            builder.Property(x => x.Is24Hours)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            builder.Property(x => x.OpeningTime)
+                .IsRequired();
+
+            builder.Property(x => x.ClosingTime)
+                .IsRequired();
+
+            // ==================== SORTING ====================
+            builder.Property(x => x.SortOrder)
+                .IsRequired()
+                .HasDefaultValue(Department.DefaultSortOrder);
+
+            // Index cho truy vấn sắp xếp
+            builder.HasIndex(x => x.SortOrder);
+
+            // ==================== STATUS ====================
             builder.Property(x => x.IsActive)
                 .IsRequired()
                 .HasDefaultValue(true);
+
+            builder.HasIndex(x => x.IsActive);
         }
     }
 }

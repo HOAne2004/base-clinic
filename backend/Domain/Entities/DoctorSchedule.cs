@@ -7,7 +7,7 @@ namespace BaseClinic.Domain.Entities
     public class DoctorSchedule : FullAuditedEntity
     {
         private const int MinSlotDuration = 5;
-        private const int MaxSlotDuration = 120;
+        private const int MaxSlotDuration = 60;
         private const int MaxBookableDaysAhead = 90;
 
         public Guid DoctorId { get; private set; }

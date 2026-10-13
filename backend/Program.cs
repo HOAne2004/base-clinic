@@ -70,7 +70,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // 4.2. Đăng ký Repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-builder.Services.AddScoped<IRepository<Appointment>, Repository<Appointment>>();
+builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IEncounterRepository, EncounterRepository>();
