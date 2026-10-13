@@ -1,34 +1,58 @@
 ﻿namespace BaseClinic.Business.Models.Doctor
 {
+    /// <summary>
+    /// DTO chi tiết bác sĩ cho ADMIN.
+    /// Bao gồm đầy đủ thông tin + audit + license.
+    /// </summary>
     public record DoctorAdminDetailDto(
         Guid Id,
-        Guid AccountId,
-        Guid DepartmentId,
         string DoctorCode,
-        string FullName,
-        string PhoneNumber,
-        string? Email,
-        string DepartmentName,
-        string AccountStatus,
-        DateTimeOffset? LastLoginAt,
+        string Slug,
+        Guid AccountId,
+        string FullName,               // Từ Account
+        string? Email,                 // Từ Account
+        string PhoneNumber,            // Từ Account
+
+        // Professional
+        string? Title,
+        string? Specialization,
+        int? YearsOfExperience,
+        string? Biography,
+        string? Languages,
+
+        // Personal
         string? Avatar,
         string? FullAddress,
         bool? Gender,
         DateTime? DateOfBirth,
         string? IdentityNumber,
-        string? LicenseNumber,
-        decimal? ConsultationFee,
-        string? Description
-    );
 
-    public record DoctorListDto(
-        Guid Id,
-        Guid AccountId,
-        string DoctorCode,
-        string FullName,
-        string PhoneNumber,
-        string? Email,
-        string DepartmentName,
-        string AccountStatus
-        );
+        // License
+        string? LicenseNumber,
+        DateTime? LicenseIssueDate,
+        DateTime? LicenseExpiryDate,
+        string? LicenseIssuedBy,
+
+        // Financial & Workload
+        decimal? ConsultationFee,
+        int? MaxPatientsPerDay,
+        DateTime? JoinDate,
+
+        // Description
+        string? Description,
+
+        // Status
+        bool IsAvailableForOnline,
+        bool IsActive,
+        int SortOrder,
+
+        // Department
+        Guid DepartmentId,
+        string? DepartmentName,
+        string? DepartmentSlug,
+
+        // Audit
+        DateTimeOffset CreatedDate,
+        DateTimeOffset? UpdatedDate
+    );
 }
