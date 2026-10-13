@@ -53,7 +53,7 @@ namespace BaseClinic.Business.Services.Departments.Commands
 
             bool adminOverrideSlug = !string.IsNullOrWhiteSpace(request.Slug);
 
-            department.UpdateName(request.Name);
+            department.UpdateName(request.Name ?? string.Empty);
             department.UpdateDetails(
                 request.ImageUrl,
                 request.ShortDescription,

@@ -1,6 +1,8 @@
 ﻿using BaseClinic.Business.Models.Department;
+using BaseClinic.Business.Models.Doctor;
 using BaseClinic.Business.Services.Departments.Commands;
 using BaseClinic.Business.Services.Departments.Queries;
+using BaseClinic.Business.Services.Doctors.Queries;
 using BaseClinic.Domain.Constants;
 using BaseClinic.Presentation.Authorization;
 using BaseClinic.Presentation.Models;
@@ -126,6 +128,18 @@ namespace BaseClinic.Presentation.Controllers
         {
             await _mediator.Send(new RestoreDepartmentCommand(id));
             return Ok(new ApiResponse<bool>(true, "Đã khôi phục khoa."));
+        }
+
+        /// <summary>
+        /// Danh sách bác sĩ đang hoạt động của một khoa — dùng cho public.
+        /// URL: GET /api/departments/{id:guid}/doctors
+        /// </summary>
+        [HttpGet("{id:guid}/doctors")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetDoctorsByDepartment(Guid id)
+        {
+            var result = await _mediator.Send(new GetDoctorsByDepartmentQuery(id));
+            return Ok(new ApiResponse<List<DoctorPublicListDto>>(result));
         }
     }
 }

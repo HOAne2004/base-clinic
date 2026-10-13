@@ -61,6 +61,18 @@
 
             [PermissionInfo("Xóa hồ sơ bác sĩ.", "Doctor", "Delete", 5)]
             public const string Delete = "doctor:delete";
+
+            [PermissionInfo("Kích hoạt lại bác sĩ.", "Doctor", "Activate", 6)]
+            public const string Activate = "doctor:activate";
+
+            [PermissionInfo("Tạm ngưng bác sĩ.", "Doctor", "Deactivate", 7)]
+            public const string Deactivate = "doctor:deactivate";
+
+            [PermissionInfo("Chuyển khoa cho bác sĩ.", "Doctor", "TransferDepartment", 8)]
+            public const string TransferDepartment = "doctor:transfer_department";
+
+            [PermissionInfo("Bác sĩ tự sửa hồ sơ.", "Doctor", "UpdateSelf", 9)]
+            public const string UpdateSelf = "doctor:update_self";
         }
 
         public static class Encounter

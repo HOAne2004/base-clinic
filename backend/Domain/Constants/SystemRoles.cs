@@ -23,12 +23,16 @@
             SystemPermissions.Department.Delete,
             SystemPermissions.Department.Deactivate,   
             SystemPermissions.Department.Activate,    
-            SystemPermissions.Department.Restore,    
+            SystemPermissions.Department.Restore,
 
+            SystemPermissions.Doctor.Manage,
             SystemPermissions.Doctor.View,
             SystemPermissions.Doctor.Create,
             SystemPermissions.Doctor.Update,
             SystemPermissions.Doctor.Delete,
+            SystemPermissions.Doctor.Activate,        
+            SystemPermissions.Doctor.Deactivate,            
+            SystemPermissions.Doctor.TransferDepartment,
 
             SystemPermissions.Patient.View,
             SystemPermissions.Patient.RequestRollback,
@@ -40,11 +44,16 @@
         [RolePermissions(
             SystemPermissions.Appointment.View,
             SystemPermissions.Appointment.CheckIn,
+
             SystemPermissions.Encounter.Start,
             SystemPermissions.Encounter.Complete,
+
             SystemPermissions.Patient.View,
+
             SystemPermissions.Department.View,
-            SystemPermissions.Doctor.View
+
+            SystemPermissions.Doctor.View,
+            SystemPermissions.Doctor.UpdateSelf
         )]
         public const string Doctor = "Doctor";
 
@@ -68,11 +77,15 @@
             SystemPermissions.Appointment.View,
             SystemPermissions.Appointment.Book,
             SystemPermissions.Appointment.Cancel,
+
             SystemPermissions.Patient.View,
             SystemPermissions.Patient.ManageDelegation,
+            SystemPermissions.Patient.RequestRollback,
+
             SystemPermissions.Department.View,
-            SystemPermissions.Doctor.View,
-            SystemPermissions.Patient.RequestRollback
+
+            SystemPermissions.Doctor.View
+
         )]
         public const string Patient = "Patient";
     }
