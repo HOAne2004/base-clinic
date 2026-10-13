@@ -24,7 +24,9 @@ namespace BaseClinic.Business.Services.Departments.Queries
                 .Select(d => new DepartmentLookupDto
                 ( 
                     d.Id,
-                    d.Name
+                    d.Name,
+                    d.DepartmentCode,
+                    d.SortOrder
                 )).ToListAsync(cancellationToken);
         }
     }

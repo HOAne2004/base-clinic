@@ -5,50 +5,34 @@ namespace BaseClinic.Business.Mappers
 {
     /// <summary>
     /// Helper chuyển Department entity sang các DTO.
-    /// Tách ra để tái sử dụng ở nhiều Query.
-    /// 
-    /// LƯU Ý: Department KHÔNG có navigation tới Doctor.
-    /// → Query Handler phải tự load doctors và truyền vào mapper.
     /// </summary>
     public static class DepartmentMapper
     {
         /// <summary>
-        /// Map sang DTO cho danh sách Admin.
-        /// Cần truyền doctorCount + activeDoctorCount (query handler tính).
+        /// Map sang DepartmentAdminListDto (cho list admin).
         /// </summary>
-        public static DepartmentDetailDto ToDetailDto(
+        public static DepartmentAdminListDto ToAdminListDto(
             Department dept,
-            int doctorCount,
             int activeDoctorCount)
         {
-            return new DepartmentDetailDto(
+            return new DepartmentAdminListDto(
                 Id: dept.Id,
                 Name: dept.Name,
                 DepartmentCode: dept.DepartmentCode,
-                ImageUrl: dept.ImageUrl,
-                ShortDescription: dept.ShortDescription,
-                FullDescription: dept.FullDescription,
-                Location: dept.Location,
                 PhoneNumber: dept.PhoneNumber,
 
                 Is24Hours: dept.Is24Hours,
                 OpeningTime: dept.OpeningTime,
                 ClosingTime: dept.ClosingTime,
 
-                SortOrder: dept.SortOrder,
                 IsActive: dept.IsActive,
+                SortOrder: dept.SortOrder,
 
-                DoctorCount: doctorCount,
-                ActiveDoctorCount: activeDoctorCount,
-
-                CreatedDate: dept.CreatedDate,
-                UpdatedDate: dept.UpdatedDate
-            );
+                ActiveDoctorCount: activeDoctorCount);
         }
 
         /// <summary>
-        /// Map sang DTO chi tiết cho Admin.
-        /// Bao gồm danh sách doctors (đã được query handler load trước).
+        /// Map sang DepartmentAdminDetailDto (cho detail admin).
         /// </summary>
         public static DepartmentAdminDetailDto ToAdminDetailDto(
             Department dept,
@@ -80,13 +64,11 @@ namespace BaseClinic.Business.Mappers
                 CreatedDate: dept.CreatedDate,
                 UpdatedDate: dept.UpdatedDate,
 
-                Doctors: doctorDtos
-            );
+                Doctors: doctorDtos);
         }
 
         /// <summary>
-        /// Map sang DTO chi tiết cho Guest/Patient.
-        /// Chỉ bao gồm doctors active.
+        /// Map sang DepartmentPublicDetailDto (cho guest).
         /// </summary>
         public static DepartmentPublicDetailDto ToPublicDetailDto(
             Department dept,
@@ -112,12 +94,11 @@ namespace BaseClinic.Business.Mappers
                 OpeningTime: dept.OpeningTime,
                 ClosingTime: dept.ClosingTime,
 
-                Doctors: doctorDtos
-            );
+                Doctors: doctorDtos);
         }
 
         /// <summary>
-        /// Map Department → LookupDto (cho dropdown).
+        /// Map Department → LookupDto.
         /// </summary>
         public static DepartmentLookupDto ToLookupDto(Department dept)
         {
@@ -125,15 +106,11 @@ namespace BaseClinic.Business.Mappers
                 Id: dept.Id,
                 Name: dept.Name,
                 DepartmentCode: dept.DepartmentCode,
-                SortOrder: dept.SortOrder
-            );
+                SortOrder: dept.SortOrder);
         }
 
         // ==================== DOCTOR HELPERS ====================
 
-        /// <summary>
-        /// Map Doctor → SummaryDto (cho Admin).
-        /// </summary>
         private static DepartmentDoctorSummaryDto ToDoctorSummaryDto(
             Doctor doctor,
             Dictionary<Guid, string> accountNamesById)
@@ -150,13 +127,9 @@ namespace BaseClinic.Business.Mappers
                 IsActive: doctor.IsActive,
                 IsAvailableForOnline: doctor.IsAvailableForOnline,
                 ConsultationFee: doctor.ConsultationFee,
-                SortOrder: doctor.SortOrder
-            );
+                SortOrder: doctor.SortOrder);
         }
 
-        /// <summary>
-        /// Map Doctor → PublicDto (cho Guest/Patient).
-        /// </summary>
         private static DepartmentDoctorPublicDto ToDoctorPublicDto(
             Doctor doctor,
             Dictionary<Guid, string> accountNamesById)
@@ -171,8 +144,7 @@ namespace BaseClinic.Business.Mappers
                 Specialization: doctor.Specialization,
                 Biography: doctor.Biography,
                 YearsOfExperience: doctor.YearsOfExperience,
-                ConsultationFee: doctor.ConsultationFee
-            );
+                ConsultationFee: doctor.ConsultationFee);
         }
     }
 }
