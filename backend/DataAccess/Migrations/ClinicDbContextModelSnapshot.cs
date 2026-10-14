@@ -1622,6 +1622,51 @@ namespace BaseClinic.Migrations
                     b.ToTable("RolePermissions", (string)null);
                 });
 
+            modelBuilder.Entity("BaseClinic.Domain.Entities.ScheduleCancellationRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DoctorScheduleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("RequestedByAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ReviewedByAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorScheduleId");
+
+                    b.HasIndex("RequestedByAccountId");
+
+                    b.HasIndex("ReviewedByAccountId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("ScheduleCancellationRequests", (string)null);
+                });
+
             modelBuilder.Entity("BaseClinic.Domain.Entities.AccountRole", b =>
                 {
                     b.HasOne("BaseClinic.Domain.Entities.Account", "Account")
@@ -1963,6 +2008,32 @@ namespace BaseClinic.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.ScheduleCancellationRequest", b =>
+                {
+                    b.HasOne("BaseClinic.Domain.Entities.DoctorSchedule", "DoctorSchedule")
+                        .WithMany()
+                        .HasForeignKey("DoctorScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "RequestedByAccount")
+                        .WithMany()
+                        .HasForeignKey("RequestedByAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BaseClinic.Domain.Entities.Account", "ReviewedByAccount")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("DoctorSchedule");
+
+                    b.Navigation("RequestedByAccount");
+
+                    b.Navigation("ReviewedByAccount");
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Account", b =>

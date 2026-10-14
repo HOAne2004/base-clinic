@@ -42,7 +42,7 @@ namespace BaseClinic.DataAccess.Configurations
             builder.HasOne(x => x.DoctorSchedule)
                 .WithMany()
                 .HasForeignKey(x => x.DoctorScheduleId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // FK → Requester Account (restrict — không xóa account khi còn request)
             builder.HasOne(x => x.RequestedByAccount)
