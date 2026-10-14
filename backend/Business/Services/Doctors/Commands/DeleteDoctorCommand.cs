@@ -1,6 +1,7 @@
 ﻿using BaseClinic.Business.Interfaces;
 using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Domain.Entities;
+using BaseClinic.Domain.Enums;
 using BaseClinic.Domain.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,12 @@ namespace BaseClinic.Business.Services.Doctors.Commands
     /// 
     /// ĐIỀU KIỆN:
     /// - Không có Appointment nào (bất kỳ status nào).
-    /// - DoctorSchedule: tự động hủy hết.
+    /// - DoctorSchedule: tự động hủy hết (chưa Completed/Cancelled).
     /// </summary>
-    public record DeleteDoctorCommand(Guid Id) : IRequest<bool>;
+    public record DeleteDoctorCommand(
+        Guid Id,
+        Guid? DeletedByAccountId = null    // audit ai xóa
+    ) : IRequest<bool>;
 
     public class DeleteDoctorCommandHandler
         : IRequestHandler<DeleteDoctorCommand, bool>
@@ -40,10 +44,11 @@ namespace BaseClinic.Business.Services.Doctors.Commands
             DeleteDoctorCommand request,
             CancellationToken cancellationToken)
         {
+            // ==================== BƯỚC 1: Tìm doctor ====================
             var doctor = await _doctorRepo.GetByIdAsync(request.Id, cancellationToken)
                 ?? throw new NotFoundException("Không tìm thấy bác sĩ.");
 
-            // Check không có Appointment
+            // ==================== BƯỚC 2: Check không có Appointment ====================
             var hasAppointments = await _appointmentRepo.GetQueryable()
                 .AnyAsync(a => a.RequestedDoctorId == doctor.Id, cancellationToken);
 
@@ -52,20 +57,27 @@ namespace BaseClinic.Business.Services.Doctors.Commands
                     "Không thể xóa bác sĩ vì vẫn còn lịch hẹn. " +
                     "Vui lòng xử lý các lịch hẹn trước.");
 
-            // Hủy toàn bộ DoctorSchedule chưa Completed
+            // ==================== BƯỚC 3: Hủy toàn bộ DoctorSchedule ====================
             var schedules = await _scheduleRepo.GetQueryableWithTracking()
                 .Where(s => s.DoctorId == doctor.Id)
                 .ToListAsync(cancellationToken);
 
+            var cancelReason = "Bác sĩ đã bị xóa khỏi hệ thống.";
+            var cancelledBy = request.DeletedByAccountId ?? Guid.Empty;
+
             foreach (var schedule in schedules)
             {
-                if (schedule.Status != Domain.Enums.DoctorScheduleStatus.Completed
-                    && schedule.Status != Domain.Enums.DoctorScheduleStatus.Cancelled)
-                {
-                    schedule.Cancel(schedule.Id, schedule.CancelReason);
-                }
+                // Chỉ hủy các ca chưa Completed / Cancelled
+                if (schedule.Status == DoctorScheduleStatus.Completed
+                    || schedule.Status == DoctorScheduleStatus.Cancelled)
+                    continue;
+
+                schedule.Cancel(
+                    cancelledByAccountId: cancelledBy,
+                    reason: cancelReason);
             }
 
+            // ==================== BƯỚC 4: Xóa mềm doctor ====================
             _doctorRepo.Delete(doctor);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);

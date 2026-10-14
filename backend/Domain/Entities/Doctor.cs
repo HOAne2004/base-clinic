@@ -70,7 +70,7 @@ namespace BaseClinic.Domain.Entities
         Guid departmentId,
         string doctorCode,
         string? slug,
-        string licenseNumber,
+        string? licenseNumber,
         DateTime? licenseIssueDate,
         DateTime? licenseExpiryDate,
         string? licenseIssuedBy,

@@ -248,7 +248,7 @@ namespace BaseClinic.DataAccess.Seeding
                     accountId: account.Id,
                     departmentId: department.Id,
                     doctorCode: $"BS{seed.SortOrder:D4}",
-                    licenseNumber: seed.LicenseNumber,
+                    licenseNumber: seed.LicenseNumber ?? "PENDING",
                     licenseIssueDate: DateTime.UtcNow.AddYears(-5),
                     licenseExpiryDate: DateTime.UtcNow.AddYears(5),
                     licenseIssuedBy: "Sở Y tế",

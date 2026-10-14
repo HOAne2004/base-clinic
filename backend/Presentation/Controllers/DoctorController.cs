@@ -220,7 +220,8 @@ namespace BaseClinic.Presentation.Controllers
         [RequirePermission(SystemPermissions.Doctor.Delete)]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await _mediator.Send(new DeleteDoctorCommand(id));
+            var accountId = GetAccountIdFromClaims();
+            await _mediator.Send(new DeleteDoctorCommand(id, accountId));
             return Ok(new ApiResponse<bool>(true, "Đã xóa bác sĩ."));
         }
     }

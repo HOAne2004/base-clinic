@@ -68,7 +68,7 @@ namespace BaseClinic.Business.Services.Departments.Commands
 
             if (adminOverrideSlug || nameChanged)
             {
-                var slugSource = adminOverrideSlug
+                var slugSource = adminOverrideSlug 
                     ? request.Slug!
                     : request.Name;
 
