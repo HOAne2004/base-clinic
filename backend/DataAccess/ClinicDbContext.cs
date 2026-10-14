@@ -40,7 +40,7 @@ namespace BaseClinic.DataAccess
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<Role> Roles => Set<Role>();
         public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
-
+        public DbSet<ScheduleCancellationRequest> ScheduleCancellationRequests => Set<ScheduleCancellationRequest>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
