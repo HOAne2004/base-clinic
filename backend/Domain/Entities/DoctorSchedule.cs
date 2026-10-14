@@ -230,5 +230,43 @@ namespace BaseClinic.Domain.Entities
 
             Status = DoctorScheduleStatus.Completed;
         }
+
+        /// <summary>
+        /// Sinh các items (slots) từ StartTime/EndTime/SlotDurationMinutes.
+        /// 
+        /// GỌI KHI:
+        /// - Tạo schedule mới.
+        /// - Update schedule (sau khi ClearItems).
+        /// 
+        /// QUY TẮC:
+        /// - Slot cuối phải khớp EndTime (không tạo slot vượt).
+        /// - Capacity mỗi slot = MaxPatientPerSlot.
+        /// </summary>
+        public void GenerateItems()
+        {
+            ClearItems();
+
+            var current = StartTime;
+
+            while (true)
+            {
+                var slotEnd = TimeOnly.FromTimeSpan(
+                    current.ToTimeSpan() + TimeSpan.FromMinutes(SlotDurationMinutes));
+
+                // Nếu slot vượt EndTime → dừng
+                if (slotEnd > EndTime)
+                    break;
+
+                var item = new DoctorScheduleItem(
+                    doctorScheduleId: Id,
+                    startTime: current,
+                    endTime: slotEnd,
+                    capacity: MaxPatientPerSlot);
+
+                AddItem(item);
+
+                current = slotEnd;
+            }
+        }
     }
 }
