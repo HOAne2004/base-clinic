@@ -37,11 +37,10 @@ API presentation.
 ```text
 BaseClinic
 ├── backend
-│   ├── BaseClinic.sln
-│   ├── BaseClinic.Api
-│   ├── BaseClinic.Business
-│   ├── BaseClinic.DataAccess
-│   └── BaseClinic.Domain
+│   ├── Presentation
+│   ├── Business
+│   ├── DataAccess
+│   └── Domain
 │
 └── frontend
     └── Next.js
