@@ -15,6 +15,7 @@
         TimeOnly ClosingTime,
 
         bool IsActive,
+        bool OnlineBookingEnabled,
         int SortOrder,
 
         int ActiveDoctorCount

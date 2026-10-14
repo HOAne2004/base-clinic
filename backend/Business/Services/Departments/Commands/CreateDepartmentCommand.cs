@@ -19,7 +19,8 @@ namespace BaseClinic.Business.Services.Departments.Commands
         bool Is24Hours = false,
         TimeOnly? OpeningTime = null,
         TimeOnly? ClosingTime = null,
-        int SortOrder = Department.DefaultSortOrder
+        int SortOrder = Department.DefaultSortOrder,
+        bool OnlineBookingEnabled = true
     ) : IRequest<Guid>;
 
     public class CreateDepartmentCommandHandler
@@ -72,7 +73,8 @@ namespace BaseClinic.Business.Services.Departments.Commands
                 is24Hours: request.Is24Hours,
                 openingTime: request.OpeningTime,
                 closingTime: request.ClosingTime,
-                sortOrder: request.SortOrder);
+                sortOrder: request.SortOrder,
+                onlineBookingEnabled: request.OnlineBookingEnabled);
 
             _departmentRepo.Add(department);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

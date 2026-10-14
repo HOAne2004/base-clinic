@@ -14,6 +14,7 @@
         string? PhoneNumber,
 
         bool? IsActive,
+        bool OnlineBookingEnabled,
 
         bool Is24Hours,
         TimeOnly OpeningTime,

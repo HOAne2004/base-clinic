@@ -20,6 +20,7 @@
 
         int SortOrder,
         bool IsActive,
+        bool OnlineBookingEnabled,
 
         // Audit — Admin cần để truy vết
         DateTimeOffset CreatedDate,

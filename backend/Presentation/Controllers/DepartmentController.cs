@@ -6,6 +6,7 @@ using BaseClinic.Business.Services.Doctors.Queries;
 using BaseClinic.Domain.Constants;
 using BaseClinic.Presentation.Authorization;
 using BaseClinic.Presentation.Models;
+using BaseClinic.Presentation.Models.Requests.Department;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -141,6 +142,27 @@ namespace BaseClinic.Presentation.Controllers
         {
             var result = await _mediator.Send(new GetDoctorsByDepartmentQuery(slug));
             return Ok(new ApiResponse<List<DoctorPublicListDto>>(result));
+        }
+
+        /// <summary>
+        /// Bật/tắt đặt lịch trực tuyến cho khoa.
+        /// URL: PATCH /api/departments/{id:guid}/online-booking
+        /// </summary>
+        [HttpPatch("{id:guid}/online-booking")]
+        [RequirePermission(SystemPermissions.Department.Update)]
+        public async Task<IActionResult> SetOnlineBooking(
+            Guid id,
+            [FromBody] SetDepartmentOnlineBookingRequest request)
+        {
+            await _mediator.Send(new SetDepartmentOnlineBookingCommand(
+                Id: id,
+                Enabled: request.Enabled));
+
+            var message = request.Enabled
+                ? "Đã bật đặt lịch trực tuyến cho khoa."
+                : "Đã tắt đặt lịch trực tuyến cho khoa.";
+
+            return Ok(new ApiResponse<bool>(true, message));
         }
     }
 }

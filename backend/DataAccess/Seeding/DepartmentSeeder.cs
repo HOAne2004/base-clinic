@@ -28,7 +28,8 @@ namespace BaseClinic.DataAccess.Seeding
             TimeOnly? OpeningTime,
             TimeOnly? ClosingTime,
             int SortOrder,
-            bool IsActive);
+            bool IsActive,
+            bool OnlineBookingEnabled);
 
         private static readonly DepartmentSeed[] SeedData =
         {
@@ -48,7 +49,8 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: null,
                 ClosingTime: null,
                 SortOrder: 1,
-                IsActive: true),
+                IsActive: true,
+                OnlineBookingEnabled: false),
 
             // ==================== KHOA GIỜ HÀNH CHÍNH ====================
             new(
@@ -66,7 +68,8 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(7, 0),
                 ClosingTime: new TimeOnly(17, 0),
                 SortOrder: 2,
-                IsActive: true),
+                IsActive: true,
+                OnlineBookingEnabled: true),
 
             new(
                 Code: "NGOAI_TONG_HOP",
@@ -83,7 +86,8 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(7, 30),
                 ClosingTime: new TimeOnly(16, 30),
                 SortOrder: 3,
-                IsActive: true),
+                IsActive: true,
+                OnlineBookingEnabled: true),
 
             new(
                 Code: "NHI",
@@ -100,7 +104,8 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(7, 0),
                 ClosingTime: new TimeOnly(17, 0),
                 SortOrder: 4,
-                IsActive: true),
+                IsActive: true, 
+                OnlineBookingEnabled : true),
 
             new(
                 Code: "SAN",
@@ -117,7 +122,8 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(7, 0),
                 ClosingTime: new TimeOnly(17, 0),
                 SortOrder: 5,
-                IsActive: true),
+                IsActive: true, 
+                OnlineBookingEnabled : true),
 
             new(
                 Code: "MAT",
@@ -134,7 +140,8 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(8, 0),
                 ClosingTime: new TimeOnly(16, 0),
                 SortOrder: 6,
-                IsActive: true),
+                IsActive: true, 
+                OnlineBookingEnabled : true),
 
             new(
                 Code: "TAI_MUI_HONG",
@@ -150,7 +157,8 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(8, 0),
                 ClosingTime: new TimeOnly(16, 0),
                 SortOrder: 7,
-                IsActive: true),
+                IsActive: true, 
+                OnlineBookingEnabled: true),
 
             new(
                 Code: "RANG_HAM_MAT",
@@ -167,7 +175,7 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(8, 0),
                 ClosingTime: new TimeOnly(17, 0),
                 SortOrder: 8,
-                IsActive: true),
+                IsActive: true, OnlineBookingEnabled : true),
 
             new(
                 Code: "DA_LIEU",
@@ -183,7 +191,7 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(8, 0),
                 ClosingTime: new TimeOnly(16, 30),
                 SortOrder: 9,
-                IsActive: true),
+                IsActive: true, OnlineBookingEnabled : true),
 
             // ==================== KHOA TẠM NGƯNG (test UI) ====================
             new(
@@ -200,7 +208,8 @@ namespace BaseClinic.DataAccess.Seeding
                 OpeningTime: new TimeOnly(7, 0),
                 ClosingTime: new TimeOnly(17, 0),
                 SortOrder: 10,
-                IsActive: false),   // ← Tạm ngưng (test UI)
+                IsActive: false,
+                OnlineBookingEnabled: false),   // ← Tạm ngưng (test UI)
         };
 
         public static async Task SeedAsync(
@@ -233,7 +242,8 @@ namespace BaseClinic.DataAccess.Seeding
                     is24Hours: seed.Is24Hours,
                     openingTime: seed.OpeningTime,
                     closingTime: seed.ClosingTime,
-                    sortOrder: seed.SortOrder);
+                    sortOrder: seed.SortOrder,
+                    onlineBookingEnabled: seed.OnlineBookingEnabled);
 
                 // Set IsActive nếu cần (constructor mặc định = true)
                 if (!seed.IsActive)

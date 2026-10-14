@@ -26,6 +26,7 @@ namespace BaseClinic.Business.Mappers
                 ClosingTime: dept.ClosingTime,
 
                 IsActive: dept.IsActive,
+                OnlineBookingEnabled: dept.OnlineBookingEnabled,
                 SortOrder: dept.SortOrder,
 
                 ActiveDoctorCount: activeDoctorCount);
@@ -60,6 +61,7 @@ namespace BaseClinic.Business.Mappers
 
                 SortOrder: dept.SortOrder,
                 IsActive: dept.IsActive,
+                OnlineBookingEnabled: dept.OnlineBookingEnabled,
 
                 CreatedDate: dept.CreatedDate,
                 UpdatedDate: dept.UpdatedDate,
@@ -94,7 +96,7 @@ namespace BaseClinic.Business.Mappers
                 Is24Hours: dept.Is24Hours,
                 OpeningTime: dept.OpeningTime,
                 ClosingTime: dept.ClosingTime,
-
+                OnlineBookingEnabled: dept.OnlineBookingEnabled,
                 Doctors: doctorDtos);
         }
 
@@ -126,6 +128,7 @@ namespace BaseClinic.Business.Mappers
                 Location: dept.Location,
                 PhoneNumber: dept.PhoneNumber,
                 IsActive: dept.IsActive,
+                OnlineBookingEnabled: dept.OnlineBookingEnabled,
                 Is24Hours: dept.Is24Hours,
                 OpeningTime: dept.OpeningTime,
                 ClosingTime: dept.ClosingTime,

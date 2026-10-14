@@ -62,7 +62,7 @@ namespace BaseClinic.Business.Services.Doctors.Commands
                 if (schedule.Status != Domain.Enums.DoctorScheduleStatus.Completed
                     && schedule.Status != Domain.Enums.DoctorScheduleStatus.Cancelled)
                 {
-                    schedule.CancelSchedule();
+                    schedule.Cancel(schedule.Id, schedule.CancelReason);
                 }
             }
 

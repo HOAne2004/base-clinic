@@ -44,7 +44,10 @@ namespace BaseClinic.Business.Services.Departments.Commands
             // 1. Deactivate department
             department.Deactivate();
 
-            // 2. Cascade: deactivate tất cả doctors đang active trong khoa
+            // 2. Tắt đặt lịch online
+            department.SetOnlineBookingEnabled(false);
+
+            // 3. Cascade: deactivate tất cả doctors đang active trong khoa
             var activeDoctors = await _doctorRepo.GetQueryableWithTracking()
                 .Where(d => d.DepartmentId == department.Id && d.IsActive)
                 .ToListAsync(cancellationToken);

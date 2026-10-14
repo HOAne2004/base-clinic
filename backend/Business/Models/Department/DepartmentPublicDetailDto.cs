@@ -20,6 +20,7 @@
         TimeOnly OpeningTime,
         TimeOnly ClosingTime,
 
+        bool OnlineBookingEnabled,
         // Chỉ doctors đang active
         List<DepartmentDoctorPublicDto> Doctors
     );
