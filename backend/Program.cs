@@ -74,6 +74,7 @@ builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
+builder.Services.AddScoped<IDoctorScheduleRepository, DoctorScheduleRepository>();
 builder.Services.AddScoped<IEncounterRepository, EncounterRepository>();
 builder.Services.AddScoped<IRepository<MergeRollbackRequest>, Repository<MergeRollbackRequest>>();
 builder.Services.AddScoped<IOtpCodeRepository, OtpCodeRepository>();
