@@ -25,13 +25,13 @@ namespace BaseClinic.Business.Services.Doctors.Commands
     {
         private readonly IDoctorRepository _doctorRepo;
         private readonly IAppointmentRepository _appointmentRepo;
-        private readonly IRepository<DoctorSchedule> _scheduleRepo;
+        private readonly IDoctorScheduleRepository _scheduleRepo;
         private readonly IUnitOfWork _unitOfWork;
 
         public DeleteDoctorCommandHandler(
             IDoctorRepository doctorRepo,
             IAppointmentRepository appointmentRepo,
-            IRepository<DoctorSchedule> scheduleRepo,
+            IDoctorScheduleRepository scheduleRepo,
             IUnitOfWork unitOfWork)
         {
             _doctorRepo = doctorRepo;
