@@ -56,6 +56,14 @@ namespace BaseClinic.Domain.Entities
         /// <summary>Lý do hủy. Chỉ có giá trị khi Status = Cancelled.</summary>
         public string? CancelReason { get; private set; }
 
+        /// <summary>
+        /// Slot đã giữ chỗ cho appointment này.
+        /// - Null: walk-in không qua slot (đến trực tiếp).
+        /// - Có: appointment đặt qua hệ thống → giữ chỗ slot của BS.
+        /// </summary>
+        public Guid? DoctorScheduleItemId { get; private set; }
+        public DoctorScheduleItem? DoctorScheduleItem { get; private set; }
+
         // ==================== CONSTRUCTOR ====================
         private Appointment() { } // EF Core
 
@@ -85,7 +93,8 @@ namespace BaseClinic.Domain.Entities
             string? contactName = null,
             PatientRelationshipType? contactRelationship = null,
             string? reason = null,
-            bool isFromReceptionist = false)
+            bool isFromReceptionist = false,
+            Guid? doctorScheduleItemId = null)
         {
             SetAppointmentCode(appointmentCode);
 
@@ -105,6 +114,7 @@ namespace BaseClinic.Domain.Entities
             Status = isFromReceptionist
                 ? AppointmentStatus.Confirmed
                 : AppointmentStatus.Pending;
+            DoctorScheduleItemId = doctorScheduleItemId;
         }
 
         // ==================== PRIVATE SETTERS ====================

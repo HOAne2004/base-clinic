@@ -20,42 +20,48 @@ namespace BaseClinic.DataAccess.Configurations
                 .IsRequired();
 
             builder.Property(x => x.StartTime)
+                .HasColumnType("time")
                 .IsRequired();
 
             builder.Property(x => x.EndTime)
+                .HasColumnType("time")
                 .IsRequired();
 
-            builder.Property(x => x.SlotDurationMinutes)
-                .IsRequired();
+            // ==================== CONFIG ====================
+            builder.Property(x => x.SlotDurationMinutes).IsRequired();
+            builder.Property(x => x.MaxPatientPerSlot).IsRequired();
 
-            builder.Property(x => x.MaxPatientPerSlot)
-                .IsRequired();
+            builder.Property(x => x.OnlineBookingEnabled)
+                .IsRequired()
+                .HasDefaultValue(true);
 
-            builder.Property(x => x.OnlineBookingCapacity)
-                .IsRequired();
+            builder.Property(x => x.Note)
+                .HasMaxLength(500);
 
-            builder.Property(x => x.Status)
-                .IsRequired();
+            // ==================== STATUS ====================
+            builder.Property(x => x.Status).IsRequired();
+
+            builder.Property(x => x.CancelReason)
+                .HasMaxLength(500);
 
             // ==================== RELATIONSHIPS ====================
-            builder.HasOne<Doctor>()
+            builder.HasOne(x => x.Doctor)
                 .WithMany()
                 .HasForeignKey(x => x.DoctorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ==================== INDEXES ====================
-            // Query nhanh theo doctor + ngày
-            builder.HasIndex(x => new { x.DoctorId, x.WorkDate });
+            builder.HasMany(x => x.Items)
+                .WithOne(x => x.DoctorSchedule)
+                .HasForeignKey(x => x.DoctorScheduleId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // ⚡ CHỐNG TRÙNG CA:
-            // 1 doctor không thể có 2 ca cùng ngày bắt đầu cùng giờ.
-            // Nếu cho phép overlap (tăng capacity) → bỏ unique này.
-            // Nếu chặn overlap → giữ.
-            //
-            // ⚠️ Bạn đã chọn "tăng capacity" khi overlap.
-            // → KHÔNG dùng unique index.
-            // → Chỉ dùng index thường để query.
-            builder.HasIndex(x => new { x.DoctorId, x.WorkDate, x.StartTime });
+            // Backing field access
+            builder.Metadata.FindNavigation(nameof(DoctorSchedule.Items))?
+                .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            // ==================== INDEXES ====================
+            builder.HasIndex(x => new { x.DoctorId, x.WorkDate });
+            builder.HasIndex(x => x.Status);
         }
     }
 }

@@ -214,6 +214,9 @@ namespace BaseClinic.Migrations
                     b.Property<Guid?>("DoctorId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("DoctorScheduleItemId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time");
 
@@ -253,6 +256,8 @@ namespace BaseClinic.Migrations
                     b.HasIndex("DepartmentId");
 
                     b.HasIndex("DoctorId");
+
+                    b.HasIndex("DoctorScheduleItemId");
 
                     b.HasIndex("PatientId");
 
@@ -396,6 +401,11 @@ namespace BaseClinic.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("OnlineBookingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<TimeOnly>("OpeningTime")
                         .HasColumnType("time");
@@ -606,6 +616,16 @@ namespace BaseClinic.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("CancelReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -624,8 +644,8 @@ namespace BaseClinic.Migrations
                     b.Property<Guid>("DoctorId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime2");
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -633,14 +653,20 @@ namespace BaseClinic.Migrations
                     b.Property<int>("MaxPatientPerSlot")
                         .HasColumnType("int");
 
-                    b.Property<int>("OnlineBookingCapacity")
-                        .HasColumnType("int");
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("OnlineBookingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<int>("SlotDurationMinutes")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime2");
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -654,16 +680,54 @@ namespace BaseClinic.Migrations
                     b.Property<Guid?>("UpdatedId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("WorkDate")
+                    b.Property<DateOnly>("WorkDate")
                         .HasColumnType("date");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Status");
+
                     b.HasIndex("DoctorId", "WorkDate");
 
-                    b.HasIndex("DoctorId", "WorkDate", "StartTime");
-
                     b.ToTable("DoctorSchedules", (string)null);
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.DoctorScheduleItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BookedCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("DoctorScheduleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("DoctorScheduleId", "StartTime");
+
+                    b.ToTable("DoctorScheduleItems", (string)null);
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Encounter", b =>
@@ -1589,6 +1653,11 @@ namespace BaseClinic.Migrations
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("BaseClinic.Domain.Entities.DoctorScheduleItem", "DoctorScheduleItem")
+                        .WithMany()
+                        .HasForeignKey("DoctorScheduleItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("BaseClinic.Domain.Entities.Patient", "Patient")
                         .WithMany()
                         .HasForeignKey("PatientId")
@@ -1603,6 +1672,8 @@ namespace BaseClinic.Migrations
                     b.Navigation("Department");
 
                     b.Navigation("Doctor");
+
+                    b.Navigation("DoctorScheduleItem");
 
                     b.Navigation("Patient");
 
@@ -1641,11 +1712,24 @@ namespace BaseClinic.Migrations
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.DoctorSchedule", b =>
                 {
-                    b.HasOne("BaseClinic.Domain.Entities.Doctor", null)
+                    b.HasOne("BaseClinic.Domain.Entities.Doctor", "Doctor")
                         .WithMany()
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Doctor");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.DoctorScheduleItem", b =>
+                {
+                    b.HasOne("BaseClinic.Domain.Entities.DoctorSchedule", "DoctorSchedule")
+                        .WithMany("Items")
+                        .HasForeignKey("DoctorScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DoctorSchedule");
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Encounter", b =>
@@ -1890,6 +1974,11 @@ namespace BaseClinic.Migrations
                     b.Navigation("OtpCodes");
 
                     b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("BaseClinic.Domain.Entities.DoctorSchedule", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("BaseClinic.Domain.Entities.Patient", b =>

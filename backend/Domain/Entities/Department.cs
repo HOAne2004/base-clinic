@@ -47,6 +47,12 @@ namespace BaseClinic.Domain.Entities
 
         public bool IsActive { get; private set; } = true;
 
+        /// <summary>
+        /// Khoa có cho phép bệnh nhân đặt lịch trực tuyến không.
+        /// - false: Khoa vẫn hoạt động nhưng bệnh nhân phải đến trực tiếp.
+        /// </summary>
+        public bool OnlineBookingEnabled { get; private set; } = true;
+
         // ==================== CONSTRUCTOR ====================
         private Department() { } // EF Core
 
@@ -62,7 +68,8 @@ namespace BaseClinic.Domain.Entities
             bool is24Hours = false,
             TimeOnly? openingTime = null,
             TimeOnly? closingTime = null,
-            int sortOrder = DefaultSortOrder)
+            int sortOrder = DefaultSortOrder,
+            bool onlineBookingEnabled = true)
         {
             ValidateCode(departmentCode);
             DepartmentCode = departmentCode.Trim().ToUpperInvariant();
@@ -76,6 +83,7 @@ namespace BaseClinic.Domain.Entities
                 closingTime ?? DefaultClosingTime);
             SetSortOrder(sortOrder);
             Activate();
+            OnlineBookingEnabled = onlineBookingEnabled;
         }
 
         // ==================== UPDATE METHODS ====================
@@ -181,6 +189,14 @@ namespace BaseClinic.Domain.Entities
         public void Activate() => IsActive = true;
 
         public void Deactivate() => IsActive = false;
+
+        /// <summary>
+        /// Bật/tắt cho phép đặt lịch trực tuyến.
+        /// </summary>
+        public void SetOnlineBookingEnabled(bool enabled)
+        {
+            OnlineBookingEnabled = enabled;
+        }
 
         // ==================== VALIDATION ====================
         private static void ValidateCode(string code)

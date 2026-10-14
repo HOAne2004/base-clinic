@@ -86,6 +86,16 @@ namespace BaseClinic.DataAccess.Configurations
                 .WithMany()
                 .HasForeignKey(a => a.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Property(a => a.DoctorScheduleItemId)
+                .IsRequired(false);
+
+            builder.HasIndex(a => a.DoctorScheduleItemId);
+
+            builder.HasOne(a => a.DoctorScheduleItem)
+                .WithMany()
+                .HasForeignKey(a => a.DoctorScheduleItemId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

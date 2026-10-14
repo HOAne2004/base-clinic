@@ -73,6 +73,10 @@ namespace BaseClinic.DataAccess.Configurations
                 .HasDefaultValue(true);
 
             builder.HasIndex(x => x.IsActive);
+            
+            builder.Property(x => x.OnlineBookingEnabled)
+                .IsRequired()
+                .HasDefaultValue(true);
         }
     }
 }

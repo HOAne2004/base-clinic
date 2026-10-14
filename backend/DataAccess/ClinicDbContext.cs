@@ -23,6 +23,7 @@ namespace BaseClinic.DataAccess
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Doctor> Doctors => Set<Doctor>();
         public DbSet<DoctorSchedule> DoctorSchedules => Set<DoctorSchedule>();
+        public DbSet<DoctorScheduleItem> DoctorScheduleItems => Set<DoctorScheduleItem>();
         public DbSet<Encounter> Encounters => Set<Encounter>();
         public DbSet<LoginHistory> LoginHistory => Set<LoginHistory>();
         public DbSet<Medicine> Medicines => Set<Medicine>();
