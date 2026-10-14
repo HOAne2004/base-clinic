@@ -29,4 +29,8 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None> 
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Business\Services\DoctorSchedule\Commands\" />
+  </ItemGroup>
 </Project>
