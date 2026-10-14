@@ -3,6 +3,7 @@ using BaseClinic.Business.Interfaces.Repositories;
 using BaseClinic.Business.Interfaces.Services;
 using BaseClinic.Business.Services;
 using BaseClinic.Business.Services.Auth.Commands;
+using BaseClinic.Business.Services.DoctorSchedules;
 using BaseClinic.Business.Settings;
 using BaseClinic.DataAccess;
 using BaseClinic.DataAccess.Repositories;
@@ -85,7 +86,7 @@ builder.Services.AddScoped<IQueueRepository, QueueRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-
+builder.Services.AddScoped<IScheduleCancellationService, ScheduleCancellationService>();
 
 
 // ============================================================
