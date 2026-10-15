@@ -269,5 +269,22 @@ namespace BaseClinic.Domain.Entities
             Status = AppointmentStatus.Cancelled;
             CancelReason = cancelReason.Trim();
         }
+
+        /// <summary>
+        /// Hủy appointment do ca làm việc bị hủy.
+        /// Set Status = Cancelled + CancelReason.
+        /// </summary>
+        public void CancelDueToScheduleCancellation(string reason)
+        {
+            if (Status is AppointmentStatus.CheckedIn or AppointmentStatus.Completed)
+                throw new DomainException(
+                    "Không thể hủy appointment đã check-in hoặc hoàn thành.");
+
+            if (Status == AppointmentStatus.Cancelled)
+                return;   // Idempotent
+
+            Status = AppointmentStatus.Cancelled;
+            CancelReason = reason;
+        }
     }
 }
