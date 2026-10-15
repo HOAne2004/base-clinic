@@ -75,6 +75,42 @@
             public const string UpdateSelf = "doctor:update_self";
         }
 
+        public static class DoctorSchedule
+        {
+            [PermissionInfo("Xem ca làm việc.", "DoctorSchedule", "View", 1)]
+            public const string View = "doctor_schedule:view";
+
+            [PermissionInfo("Tạo ca làm việc.", "DoctorSchedule", "Create", 2)]
+            public const string Create = "doctor_schedule:create";
+
+            [PermissionInfo("Cập nhật ca làm việc.", "DoctorSchedule", "Update", 3)]
+            public const string Update = "doctor_schedule:update";
+
+            [PermissionInfo("Xóa ca làm việc.", "DoctorSchedule", "Delete", 4)]
+            public const string Delete = "doctor_schedule:delete";
+
+            [PermissionInfo("Auto-fill ca làm việc.", "DoctorSchedule", "AutoFill", 5)]
+            public const string AutoFill = "doctor_schedule:autofill";
+
+            [PermissionInfo("Đánh dấu ca hoàn thành.", "DoctorSchedule", "Complete", 6)]
+            public const string Complete = "doctor_schedule:complete";
+
+            [PermissionInfo("Hủy ca trực tiếp.", "DoctorSchedule", "Cancel", 7)]
+            public const string Cancel = "doctor_schedule:cancel";
+
+            [PermissionInfo("Gửi yêu cầu hủy ca.", "DoctorSchedule", "RequestCancel", 8)]
+            public const string RequestCancel = "doctor_schedule:request_cancel";
+
+            [PermissionInfo("Duyệt yêu cầu hủy ca.", "DoctorSchedule", "ApproveCancel", 9)]
+            public const string ApproveCancel = "doctor_schedule:approve_cancel";
+
+            [PermissionInfo("Từ chối yêu cầu hủy ca.", "DoctorSchedule", "RejectCancel", 10)]
+            public const string RejectCancel = "doctor_schedule:reject_cancel";
+
+            [PermissionInfo("Khóa/mở khóa slot.", "DoctorSchedule", "BlockSlot", 11)]
+            public const string BlockSlot = "doctor_schedule:block_slot";
+        }
+
         public static class Encounter
         {
             [PermissionInfo("Bắt đầu phiên khám mới.", "Encounter", "Start", 1)]
